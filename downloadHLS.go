@@ -13,24 +13,22 @@ import (
 	"strings"
 )
 
-func DownloadHLS() {
+func DownloadHLS(baseM3U8URL string) {
 	os.MkdirAll(outputDir, 0755)
 
-	// Step 1: Download the master playlist
-	masterBody := downloadFile(baseM3U8URL, authHeader)
+	masterBody := downloadFile(baseM3U8URL, accessToken)
 	defer masterBody.Close()
 
-	// Step 2: Parse the master playlist and find video and audio playlists
 	baseURL, _ := url.Parse(baseM3U8URL)
 	var videoM3U8 string
-	audioM3U8s := make(map[string]string) // map[lang]url
+	audioM3U8s := make(map[string]string)
 
 	scanner := bufio.NewScanner(masterBody)
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		if strings.HasPrefix(line, "#EXT-X-STREAM-INF") {
-			// Next line will be the video playlist
+
 			scanner.Scan()
 			videoM3U8 = resolveURL(baseURL, scanner.Text())
 		}
@@ -60,10 +58,9 @@ func DownloadHLS() {
 	fmt.Printf(`ffmpeg -allowed_extensions ALL -i %s/video_local.m3u8 -c copy output.mp4`+"\n", outputDir)
 }
 
-// Download and parse media playlist (.m3u8), download all .ts segments
 func downloadMediaPlaylist(playlistURL, folder string) []string {
 	u, _ := url.Parse(playlistURL)
-	resp := downloadFile(playlistURL, authHeader)
+	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()
 
 	dir := filepath.Join(outputDir, folder)
@@ -93,7 +90,7 @@ func downloadMediaPlaylist(playlistURL, folder string) []string {
 		localPath := filepath.Join(dir, localSegment)
 
 		fmt.Printf("Downloading %s...\n", localPath)
-		err := saveFile(segmentURL, authHeader, localPath)
+		err := saveFile(segmentURL, accessToken, localPath)
 		if err != nil {
 			log.Fatalf("Failed to download segment: %v", err)
 		}
@@ -105,7 +102,6 @@ func downloadMediaPlaylist(playlistURL, folder string) []string {
 	return downloaded
 }
 
-// Download a file with Authorization header
 func downloadFile(fileURL, auth string) io.ReadCloser {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fileURL, nil)
@@ -124,7 +120,6 @@ func downloadFile(fileURL, auth string) io.ReadCloser {
 	return resp.Body
 }
 
-// Save a file locally
 func saveFile(fileURL, auth, path string) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fileURL, nil)
@@ -153,7 +148,6 @@ func saveFile(fileURL, auth, path string) error {
 	return err
 }
 
-// Resolve relative URI to full URL
 func resolveURL(base *url.URL, ref string) string {
 	u, err := base.Parse(ref)
 	if err != nil {
@@ -162,7 +156,6 @@ func resolveURL(base *url.URL, ref string) string {
 	return u.String()
 }
 
-// Extract attribute from EXT-X-MEDIA line
 func extractAttr(line, key string) string {
 	re := regexp.MustCompile(key + `="([^"]+)"`)
 	matches := re.FindStringSubmatch(line)

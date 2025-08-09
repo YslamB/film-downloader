@@ -9,26 +9,25 @@ import (
 	"time"
 )
 
-func DownloadMp4() {
-	outputFile := "output.mp4"
+func DownloadMp4(baseM3U8URL, outputDir string) {
 
 	cmd := exec.Command(
 		"ffmpeg",
-		"-headers", authHeader,
+		"-headers", "authorization:"+accessToken,
 		"-i", baseM3U8URL,
 		"-map", "0:v", "-map", "0:a",
 		"-c", "copy",
 		"-bsf:a", "aac_adtstoasc",
-		outputFile,
+		outputDir,
 	)
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Fatalf("Error getting stderr pipe: %v", err)
+		log.Fatalf("❌ Error getting stderr pipe: %v", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		log.Fatalf("Error starting ffmpeg: %v", err)
+		log.Fatalf("❌ Error starting ffmpeg: %v", err)
 	}
 
 	scanner := bufio.NewScanner(stderr)
@@ -66,12 +65,12 @@ func DownloadMp4() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error reading stderr: %v", err)
+		log.Fatalf("❌ Error reading stderr: %v", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		log.Fatalf("ffmpeg failed: %v", err)
+		log.Fatalf("❌ ffmpeg failed: %v", err)
 	}
 
-	log.Println("Download completed:", outputFile)
+	log.Println("Download completed:", outputDir)
 }
