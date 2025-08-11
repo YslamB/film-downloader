@@ -1,7 +1,8 @@
-package main
+package downloader
 
 import (
 	"bufio"
+	"film-downloader/internal/config"
 	"fmt"
 	"io"
 	"log"
@@ -13,10 +14,10 @@ import (
 	"strings"
 )
 
-func DownloadHLS(baseM3U8URL string) {
+func DownloadHLS(baseM3U8URL string, cfg config.Config) {
 	os.MkdirAll("fileName.mp4", 0755)
 
-	masterBody := downloadFile(baseM3U8URL, accessToken)
+	masterBody := downloadFile(baseM3U8URL, cfg.AccessToken)
 	defer masterBody.Close()
 
 	baseURL, _ := url.Parse(baseM3U8URL)
@@ -47,18 +48,18 @@ func DownloadHLS(baseM3U8URL string) {
 	}
 
 	fmt.Println("Downloading video segments...")
-	downloadMediaPlaylist(videoM3U8, "video")
+	downloadMediaPlaylist(videoM3U8, "video", cfg.AccessToken)
 
 	for lang, audioURL := range audioM3U8s {
 		fmt.Printf("Downloading audio segments (%s)...\n", lang)
-		downloadMediaPlaylist(audioURL, "audio_"+lang)
+		downloadMediaPlaylist(audioURL, "audio_"+lang, cfg.AccessToken)
 	}
 
 	fmt.Printf("✅ Download complete! You can now use ffmpeg to convert the video:\n")
 	fmt.Printf(`ffmpeg -allowed_extensions ALL -i %s/video_local.m3u8 -c copy output.mp4`+"\n", "fileName.mp4")
 }
 
-func downloadMediaPlaylist(playlistURL, folder string) []string {
+func downloadMediaPlaylist(playlistURL, folder, accessToken string) []string {
 	u, _ := url.Parse(playlistURL)
 	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()

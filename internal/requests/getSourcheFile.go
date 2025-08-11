@@ -1,22 +1,24 @@
-package main
+package requests
 
 import (
 	"encoding/json"
+	"film-downloader/internal/config"
+	"film-downloader/internal/models"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 )
 
-func GetFilmSourceURL(filmID string) (Movie, error) {
-	var movie Movie
+func GetFilmSourceURL(filmID string, cfg config.Config) (models.Movie, error) {
+	var movie models.Movie
 	apiURL := fmt.Sprintf("https://film.beletapis.com/api/v2/files/%s?type=1", filmID)
 
 	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
 		return movie, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", accessToken)
+	req.Header.Set("Authorization", cfg.AccessToken)
 
 	client := &http.Client{
 		Timeout: time.Second * 5,
@@ -49,9 +51,9 @@ func GetFilmSourceURL(filmID string) (Movie, error) {
 	}
 
 	for _, source := range result.Sources {
-		if source.Quality == quality {
+		if source.Quality == "1080p" {
 			movie.Source = source.Filename
-			movie.Name = quality
+			movie.Name = "1080p"
 			return movie, nil
 		}
 	}

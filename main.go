@@ -1,92 +1,31 @@
 package main
 
 import (
-	myhash "film-downloader/hash"
+	"context"
+	"film-downloader/internal/config"
+	"film-downloader/internal/cron"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"time"
-
-	"github.com/joho/godotenv"
+	"os/signal"
+	"sync"
+	"syscall"
 )
-
-var (
-	accessToken string
-	filmID      string
-	seasonID    string
-	episodeID   string
-	quality     string
-	secureKey   string
-	envHash     string
-	expiresAt   int64
-)
-
-func init() {
-	err := godotenv.Load("./.env")
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	accessToken = os.Getenv("ACCESS_TOKEN")
-	filmID = os.Getenv("FILM_ID")
-	seasonID = os.Getenv("SEASON_ID")
-	episodeID = os.Getenv("EPISODE_ID")
-	quality = os.Getenv("QUALITY")
-	envHash = os.Getenv("HASH")
-	expiresAt, err = strconv.ParseInt(os.Getenv("EXPIRES_AT"), 10, 64)
-
-	if err != nil {
-		log.Fatalf("EXPIRES_AT must be integer: %e", err)
-	}
-
-	secureKey = "w3r1Sec4re_Token_"
-}
-
-type Movie struct {
-	Name   string
-	Source string
-}
 
 func main() {
-	// generate hash
-	// thirtyDays := 30 * 24 * time.Hour
-	// hash, expiresAt := myhash.GenerateExpirableHash(thirtyDays, secureKey, "Assa")
-	// fmt.Println(hash, expiresAt)
+	wg := sync.WaitGroup{}
+	cfg := config.Init()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	// solve hash
-	if !myhash.VerifyHash(envHash, secureKey, "Assa", expiresAt) {
-		log.Fatalf("Subscription is expiret")
-	}
+	cron.CheckDaily(ctx, &wg)
+	quit := make(chan os.Signal, 1)
+	defer close(quit)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
 
-	fmt.Println("🥳 👏👏 Subscription is active")
+	fmt.Println("\nReceived shutdown signal...")
+	cancel() // Cancel the context to signal goroutines to stop
+	wg.Wait()
+	log.Println("Shutting down server...")
 
-	var movies []Movie
-	var err error
-
-	if episodeID == "" && seasonID == "" && filmID != "" {
-		source, err := GetFilmSourceURL(filmID)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		movies = append(movies, source)
-	}
-
-	if seasonID != "" {
-		movies, err = GetEpisodesWithSeasonID(seasonID, episodeID)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	fmt.Println("✅ Received Source files...", movies)
-
-	for i := range movies {
-		DownloadMp4(movies[i], time.Now().Format("2006-01-02"))
-	}
-
-	fmt.Println("👮‍♀️ everithing is ok 🎯")
 }

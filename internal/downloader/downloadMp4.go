@@ -1,7 +1,9 @@
-package main
+package downloader
 
 import (
 	"bufio"
+	"film-downloader/internal/config"
+	"film-downloader/internal/models"
 	"log"
 	"os"
 	"os/exec"
@@ -10,7 +12,7 @@ import (
 	"time"
 )
 
-func DownloadMp4(baseM3U8URL Movie, outputDir string) {
+func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg config.Config) {
 	err := os.MkdirAll(outputDir, 0777)
 	if err != nil {
 		log.Fatalf("failed to create directory: %e", err)
@@ -18,7 +20,7 @@ func DownloadMp4(baseM3U8URL Movie, outputDir string) {
 
 	cmd := exec.Command(
 		"ffmpeg",
-		"-headers", "authorization:"+accessToken,
+		"-headers", "authorization:"+cfg.AccessToken,
 		"-i", baseM3U8URL.Source,
 		"-map", "0:v", "-map", "0:a",
 		"-c", "copy",
