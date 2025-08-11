@@ -7,34 +7,36 @@ import (
 	"net/http"
 )
 
-func GetEpisodesWithSeasonID(seasonID, episodeID string) ([]string, error) {
+func GetEpisodesWithSeasonID(seasonID, episodeID string) ([]Movie, error) {
+	var movies []Movie
 	url := fmt.Sprintf("https://film.beletapis.com/api/v2/episodes?seasonId=%s", seasonID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("❌ failed to create request: %w", err)
+		return movies, fmt.Errorf("❌ failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", accessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("❌ request failed: %w", err)
+		return movies, fmt.Errorf("❌ request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("❌ bad response: %s", resp.Status)
+		return movies, fmt.Errorf("❌ bad response: %s", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("❌ failed to read response: %w", err)
+		return movies, fmt.Errorf("❌ failed to read response: %w", err)
 	}
 
 	var result struct {
 		Episodes []struct {
-			ID      int `json:"id"`
+			ID      int    `json:"id"`
+			Name    string `json:"name"`
 			Sources []struct {
 				DownloadURL string `json:"download_url"`
 				Quality     string `json:"quality"`
@@ -43,28 +45,28 @@ func GetEpisodesWithSeasonID(seasonID, episodeID string) ([]string, error) {
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("❌ failed to parse JSON: %w", err)
+		return movies, fmt.Errorf("❌ failed to parse JSON: %w", err)
 	}
 
-	var urls []string
 	for _, ep := range result.Episodes {
 		idStr := fmt.Sprintf("%d", ep.ID)
 		for _, source := range ep.Sources {
-			if source.Quality == "1080p" {
+			if source.Quality == quality {
 				if episodeID != "" && idStr == episodeID {
-					return []string{source.DownloadURL}, nil
+					movies = append(movies, Movie{Source: source.DownloadURL, Name: ep.Name})
+					return movies, nil
 				}
 				if episodeID == "" {
-					urls = append(urls, source.DownloadURL)
+					movies = append(movies, Movie{Source: source.DownloadURL, Name: ep.Name})
 				}
 			}
 		}
 	}
 
 	// If episodeID was specified but not found
-	if episodeID != "" && len(urls) == 0 {
-		return nil, fmt.Errorf("❌ episode %s not found or has no 1080p source", episodeID)
+	if episodeID != "" && len(movies) == 0 {
+		return movies, fmt.Errorf("❌ episode %s not found or has no 1080p source", episodeID)
 	}
 
-	return urls, nil
+	return movies, nil
 }

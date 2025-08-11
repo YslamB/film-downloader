@@ -3,25 +3,31 @@ package main
 import (
 	"bufio"
 	"log"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 )
 
-func DownloadMp4(baseM3U8URL, outputDir string) {
+func DownloadMp4(baseM3U8URL Movie, outputDir string) {
+	err := os.MkdirAll(outputDir, 0777)
+	if err != nil {
+		log.Fatalf("failed to create directory: %e", err)
+	}
 
 	cmd := exec.Command(
 		"ffmpeg",
 		"-headers", "authorization:"+accessToken,
-		"-i", baseM3U8URL,
+		"-i", baseM3U8URL.Source,
 		"-map", "0:v", "-map", "0:a",
 		"-c", "copy",
 		"-bsf:a", "aac_adtstoasc",
-		outputDir,
+		outputDir+"/"+baseM3U8URL.Name+".mp4",
 	)
 
 	stderr, err := cmd.StderrPipe()
+
 	if err != nil {
 		log.Fatalf("❌ Error getting stderr pipe: %v", err)
 	}

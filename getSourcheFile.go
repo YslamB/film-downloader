@@ -5,31 +5,35 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
-func GetFilmSourceURL(filmID string) (string, error) {
+func GetFilmSourceURL(filmID string) (Movie, error) {
+	var movie Movie
 	apiURL := fmt.Sprintf("https://film.beletapis.com/api/v2/files/%s?type=1", filmID)
 
-	req, err := http.NewRequest("GET", apiURL, nil)
+	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return movie, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", accessToken)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 5,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
+		return movie, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("bad response: %s", resp.Status)
+		return movie, fmt.Errorf("bad response: %s", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to read response: %w", err)
+		return movie, fmt.Errorf("failed to read response: %w", err)
 	}
 
 	var result struct {
@@ -41,14 +45,16 @@ func GetFilmSourceURL(filmID string) (string, error) {
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse JSON: %w", err)
+		return movie, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
 	for _, source := range result.Sources {
-		if source.Quality == "1080p" {
-			return source.Filename, nil
+		if source.Quality == quality {
+			movie.Source = source.Filename
+			movie.Name = quality
+			return movie, nil
 		}
 	}
 
-	return "", fmt.Errorf("1080p source not found")
+	return movie, fmt.Errorf("1080p source not found")
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func DownloadHLS(baseM3U8URL string) {
-	os.MkdirAll(outputDir, 0755)
+	os.MkdirAll("fileName.mp4", 0755)
 
 	masterBody := downloadFile(baseM3U8URL, accessToken)
 	defer masterBody.Close()
@@ -55,7 +55,7 @@ func DownloadHLS(baseM3U8URL string) {
 	}
 
 	fmt.Printf("✅ Download complete! You can now use ffmpeg to convert the video:\n")
-	fmt.Printf(`ffmpeg -allowed_extensions ALL -i %s/video_local.m3u8 -c copy output.mp4`+"\n", outputDir)
+	fmt.Printf(`ffmpeg -allowed_extensions ALL -i %s/video_local.m3u8 -c copy output.mp4`+"\n", "fileName.mp4")
 }
 
 func downloadMediaPlaylist(playlistURL, folder string) []string {
@@ -63,7 +63,7 @@ func downloadMediaPlaylist(playlistURL, folder string) []string {
 	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()
 
-	dir := filepath.Join(outputDir, folder)
+	dir := filepath.Join("fileName.mp4", folder)
 	os.MkdirAll(dir, 0755)
 
 	localM3U8 := filepath.Join(dir, "video_local.m3u8")
