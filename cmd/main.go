@@ -20,7 +20,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(1)
-	err := cron.DownloadWithID(ctx, "", "", "", cfg, db)
+	err := cron.DownloadWithID(ctx, "117662", "117659", "117658", cfg, db)
 
 	if err != nil {
 		log.Fatal(err)

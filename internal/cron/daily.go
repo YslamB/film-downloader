@@ -65,7 +65,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	fmt.Println("✅ Received Source files...", movies)
 
 	for i := range movies {
-		downloader.DownloadMp4(movies[i], time.Now().Format("2006-01-02"), cfg, db)
+		downloader.DownloadHLS(movies[i], cfg)
 	}
 
 	return nil

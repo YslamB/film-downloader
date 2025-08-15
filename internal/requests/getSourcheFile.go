@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"film-downloader/internal/config"
 	"film-downloader/internal/models"
+	"film-downloader/internal/utils"
 	"fmt"
 	"io"
 	"net/http"
@@ -54,7 +55,11 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config) (m
 	for _, source := range result.Sources {
 		if source.Quality == "1080p" {
 			movie.Source = source.Filename
-			movie.Name = "1080p"
+			movie.Name, err = utils.GenerateUUID()
+
+			if err != nil {
+				return movie, fmt.Errorf("failed to generate UUID: %w", err)
+			}
 			return movie, nil
 		}
 	}
