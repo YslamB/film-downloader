@@ -26,6 +26,7 @@ create table episodes (
     "id" serial primary key,
     "season_id" integer not null,
     "name" varchar(100) not null,
+    "status" integer not null default 0, -- 0 created, 1- uploaded, 3- error, 
     "created_at" timestamp default now() not null,    
     CONSTRAINT seasons_season_id_fk
         FOREIGN KEY (season_id)

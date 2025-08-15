@@ -7,9 +7,10 @@ import (
 	"film-downloader/internal/models"
 	"film-downloader/internal/requests"
 	"fmt"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func CheckDaily(ctx context.Context, wg *sync.WaitGroup) {
@@ -39,16 +40,15 @@ func CheckWithStatus() {
 
 }
 
-func DownloadWithID(episodeID, seasonID, filmID string) {
+func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg *config.Config, db *pgxpool.Pool) error {
 	var movies []models.Movie
 	var err error
-	cfg := config.Init()
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
-		source, err := requests.GetFilmSourceURL(filmID, cfg)
+		source, err := requests.GetFilmSourceURL(ctx, filmID, cfg)
 
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		movies = append(movies, source)
@@ -58,14 +58,15 @@ func DownloadWithID(episodeID, seasonID, filmID string) {
 		movies, err = requests.GetEpisodesWithSeasonID(seasonID, episodeID, cfg)
 
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
 	fmt.Println("✅ Received Source files...", movies)
 
 	for i := range movies {
-		downloader.DownloadMp4(movies[i], time.Now().Format("2006-01-02"), cfg)
+		downloader.DownloadMp4(movies[i], time.Now().Format("2006-01-02"), cfg, db)
 	}
 
+	return nil
 }

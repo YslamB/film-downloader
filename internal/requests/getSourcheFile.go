@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"context"
 	"encoding/json"
 	"film-downloader/internal/config"
 	"film-downloader/internal/models"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func GetFilmSourceURL(filmID string, cfg config.Config) (models.Movie, error) {
+func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config) (models.Movie, error) {
 	var movie models.Movie
 	apiURL := fmt.Sprintf("https://film.beletapis.com/api/v2/files/%s?type=1", filmID)
 

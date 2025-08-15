@@ -10,9 +10,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg config.Config) {
+func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg *config.Config, db *pgxpool.Pool) {
 	err := os.MkdirAll(outputDir, 0777)
 	if err != nil {
 		log.Fatalf("failed to create directory: %e", err)

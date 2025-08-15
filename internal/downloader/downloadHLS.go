@@ -54,9 +54,6 @@ func DownloadHLS(baseM3U8URL string, cfg config.Config) {
 		fmt.Printf("Downloading audio segments (%s)...\n", lang)
 		downloadMediaPlaylist(audioURL, "audio_"+lang, cfg.AccessToken)
 	}
-
-	fmt.Printf("✅ Download complete! You can now use ffmpeg to convert the video:\n")
-	fmt.Printf(`ffmpeg -allowed_extensions ALL -i %s/video_local.m3u8 -c copy output.mp4`+"\n", "fileName.mp4")
 }
 
 func downloadMediaPlaylist(playlistURL, folder, accessToken string) []string {
@@ -80,6 +77,7 @@ func downloadMediaPlaylist(playlistURL, folder, accessToken string) []string {
 
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		if strings.HasPrefix(line, "#") {
 			out.WriteString(line + "\n")
 			continue
@@ -89,9 +87,9 @@ func downloadMediaPlaylist(playlistURL, folder, accessToken string) []string {
 		segmentURL := resolveURL(u, line)
 		localSegment := fmt.Sprintf("segment_%03d.ts", segmentIndex)
 		localPath := filepath.Join(dir, localSegment)
-
 		fmt.Printf("Downloading %s...\n", localPath)
 		err := saveFile(segmentURL, accessToken, localPath)
+
 		if err != nil {
 			log.Fatalf("Failed to download segment: %v", err)
 		}
@@ -106,15 +104,17 @@ func downloadMediaPlaylist(playlistURL, folder, accessToken string) []string {
 func downloadFile(fileURL, auth string) io.ReadCloser {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fileURL, nil)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	req.Header.Set("Authorization", auth)
-
 	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if resp.StatusCode != 200 {
 		log.Fatalf("Failed to fetch %s: %s", fileURL, resp.Status)
 	}
@@ -124,15 +124,18 @@ func downloadFile(fileURL, auth string) io.ReadCloser {
 func saveFile(fileURL, auth, path string) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fileURL, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", auth)
 
-	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
+
+	req.Header.Set("Authorization", auth)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -140,17 +143,19 @@ func saveFile(fileURL, auth, path string) error {
 	}
 
 	out, err := os.Create(path)
+
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
+	defer out.Close()
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
 
 func resolveURL(base *url.URL, ref string) string {
 	u, err := base.Parse(ref)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -160,6 +165,7 @@ func resolveURL(base *url.URL, ref string) string {
 func extractAttr(line, key string) string {
 	re := regexp.MustCompile(key + `="([^"]+)"`)
 	matches := re.FindStringSubmatch(line)
+
 	if len(matches) >= 2 {
 		return matches[1]
 	}
