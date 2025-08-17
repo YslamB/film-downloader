@@ -1,0 +1,521 @@
+1. response 
+{
+    "status": "ok",
+    "message": "",
+    "film": {
+      "id": 107595,
+      "year": 2011,
+      "type_id": 1,
+      "category_id": 1,
+      "name": "Бункер",
+      "age": "16",
+      "duration": "96",
+      "language": "Rusça",
+      "description": "Адриан – талантливый дирижер оркестра филармонии. Из-за своей работы он вынужден переехать в Колумбию. Вместе с ним едет и его любимая девушка Белен, которая ради этого бросает работу и налаженную жизнь.\nОднажды, вернувшись домой, Адриан обнаруживает послание от Белен. В нем сказано, что она уходит и просит ее не искать. Парень очень тяжело переживает расставание. Все начинает налаживаться после того, как он знакомится с милой девушкой Фабианой. Между ними вспыхивает роман, и девушка переезжает жить к Адриану. Правда, на новом месте жительства Фабиане не по себе, ведь в доме постоянно происходят странные и пугающие ее вещи.",
+      "genres": [
+        "Triller",
+        "Drama",
+        "Detektiw"
+      ],
+      "countries": [
+        {
+          "id": 71,
+          "name": "Kolumbiýa"
+        },
+        {
+          "id": 13,
+          "name": "Ispaniýa"
+        }
+      ],
+      "actors": [
+        {
+          "id": 14339,
+          "name": "Клара Лаго",
+          "image": "{\"url\":\"https://img.belet.me/actors/14339/1dbb1a87-2fbb-4e22-b5ee-47a639a9874e.jpg\",\"width\":1024,\"height\":1024}"
+        },
+        {
+          "id": 33942,
+          "name": "Ким Гутьеррес",
+          "image": "{\"url\":\"https://img.belet.me/actors/33942/e38a23d8-b5bc-4202-8db8-620a597e4209.jpg\",\"width\":600,\"height\":800}"
+        },
+        {
+          "id": 33943,
+          "name": "Мартина Гарсия",
+          "image": "{\"url\":\"https://img.belet.me/actors/33943/adf32a4b-4df1-47b2-ae01-4d661db8ef53.jpg\",\"width\":1024,\"height\":1024}"
+        }
+      ],
+      "directors": [
+        {
+          "id": 26282,
+          "name": "Андрес Байс",
+          "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+        }
+      ],
+      "seasons": null,
+      "trailers": null,
+      "studios": null,
+      "thumbnails": {
+        "default": {
+          "url": "https://img.belet.me/images/107595/f1ee43d1-eb9a-4fef-8c7f-f26940675e37.jpg",
+          "width": 640,
+          "height": 900
+        },
+        "high": {
+          "url": "https://img.belet.me/images/107595/66cbc9e5-b4bd-4ad1-968a-d11e3d418277.jpg",
+          "width": 640,
+          "height": 900
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/107595/31449b2c-63a6-42c6-a357-b8719ff13d03.jpg",
+          "width": 420,
+          "height": 654
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/107595/ab793f7c-3b41-4cbd-961f-20d22ba41e08.jpg",
+          "width": 280,
+          "height": 400
+        }
+      },
+      "images": {
+        "vertical": {
+          "default": {
+            "url": "https://img.belet.me/images/107595/f1ee43d1-eb9a-4fef-8c7f-f26940675e37.jpg",
+            "width": 640,
+            "height": 900
+          },
+          "high": {
+            "url": "https://img.belet.me/images/107595/66cbc9e5-b4bd-4ad1-968a-d11e3d418277.jpg",
+            "width": 640,
+            "height": 900
+          },
+          "medium": {
+            "url": "https://img.belet.me/images/107595/31449b2c-63a6-42c6-a357-b8719ff13d03.jpg",
+            "width": 420,
+            "height": 654
+          },
+          "standard": {
+            "url": "https://img.belet.me/images/107595/ab793f7c-3b41-4cbd-961f-20d22ba41e08.jpg",
+            "width": 280,
+            "height": 400
+          }
+        },
+        "vertical_without_name": {
+          "default": {
+            "url": "https://img.belet.me/images/107595/37ea1742-bc31-41f1-867d-1db5ab9517e3.jpg",
+            "width": 640,
+            "height": 900
+          },
+          "high": {
+            "url": "https://img.belet.me/images/107595/06b5aa2d-3537-43cb-aec1-09a6ecf2a77c.jpg",
+            "width": 640,
+            "height": 900
+          },
+          "medium": {
+            "url": "https://img.belet.me/images/107595/a8c09c7e-7376-4400-a212-6421e62f19be.jpg",
+            "width": 420,
+            "height": 654
+          },
+          "standard": {
+            "url": "https://img.belet.me/images/107595/ac19122a-9201-40bb-996a-5b819485f049.jpg",
+            "width": 280,
+            "height": 400
+          }
+        },
+        "horizontal_without_name": {
+          "default": {
+            "url": "https://img.belet.me/images/107595/f963f1d8-bc97-40b9-84ec-24159f7a2562.jpg",
+            "width": 1920,
+            "height": 1080
+          },
+          "high": {
+            "url": "https://img.belet.me/images/107595/9ed5e86f-4913-49bf-9e97-4bdb16ad4bbf.jpg",
+            "width": 1280,
+            "height": 720
+          },
+          "medium": {
+            "url": "https://img.belet.me/images/107595/e61599af-cc42-4981-8e78-cb34c94374b4.jpg",
+            "width": 854,
+            "height": 480
+          },
+          "standard": {
+            "url": "https://img.belet.me/images/107595/0f66feed-62b2-42a1-949e-fbf451df7c62.jpg",
+            "width": 640,
+            "height": 360
+          }
+        },
+        "horizontal_with_name": {
+          "default": {
+            "url": "https://img.belet.me/images/107595/57dbdc84-9de3-4fdd-8740-028777c2c998.jpg",
+            "width": 1920,
+            "height": 1080
+          },
+          "high": {
+            "url": "https://img.belet.me/images/107595/3d55d78c-9954-4e20-b266-c0c0f1aab938.jpg",
+            "width": 1280,
+            "height": 720
+          },
+          "medium": {
+            "url": "https://img.belet.me/images/107595/f32d86c3-02fc-4775-844e-55f56229d637.jpg",
+            "width": 854,
+            "height": 480
+          },
+          "standard": {
+            "url": "https://img.belet.me/images/107595/f4eb376b-5596-496f-b795-7bb893cf5251.jpg",
+            "width": 640,
+            "height": 360
+          }
+        },
+        "name": {
+          "url": "https://img.belet.me/images/107595/80fb96ef-a383-4f5f-bfe5-5860bcfb9d7d.png",
+          "width": 1341,
+          "height": 250
+        }
+      },
+      "last_episode_info": {
+        "episode_watch_time": 0,
+        "episode_id": 0,
+        "season_id": 0,
+        "episode_name": "",
+        "episode_duration": "",
+        "episode_position": null,
+        "season_position": null
+      },
+      "media_info": {
+        "audio_info": null,
+        "subtitle_info": null
+      },
+      "parent_id": 0,
+      "rating_kp": 7.1,
+      "rating_imdb": 7.3,
+      "watch_time": 0,
+      "like": false,
+      "dislike": false,
+      "favorites": false,
+      "for_kids": false
+    }
+}
+
+
+2. response
+{
+  "status": "ok",
+  "message": "",
+  "film": {
+    "id": 117658,
+    "year": 2022,
+    "type_id": 2,
+    "category_id": 2,
+    "name": "Уэнздей",
+    "age": "16",
+    "duration": "0",
+    "language": "Rusça",
+    "description": "Уэнздей  дочь Гомеса и Мортиши Аддамс, учится в академии Nevermore. Ей предстоит освоить экстрасенсорные способности, чтобы остановить местного серийного убийцу и раскрыть тайну родителей.",
+    "genres": [
+      "Komediýa",
+      "Maşgala",
+      "Kriminal",
+      "Detektiw",
+      "Fantastiki"
+    ],
+    "countries": [
+      {
+        "id": 3,
+        "name": "ABŞ"
+      }
+    ],
+    "actors": [
+      {
+        "id": 6926,
+        "name": "Дженна Ортега",
+        "image": "{\"url\":\"https://img.belet.me/actors/6926/488feec7-7e63-4e21-93c0-12c21ed80b81.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 344,
+        "name": "Гвендолин Кристи",
+        "image": "{\"url\":\"https://img.belet.me/actors/344/67e94467-f513-47ee-b5e7-f3d4b547318b.jpg\",\"width\":600,\"height\":800}"
+      },
+      {
+        "id": 3203,
+        "name": "Рики Линдхоум",
+        "image": "{\"url\":\"https://img.belet.me/actors/3203/bc11b9ea-1277-4200-8ea6-ac6c028ae81f.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 52596,
+        "name": "Хантер Дуэн",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 6832,
+        "name": "Эмма Майерс",
+        "image": "{\"url\":\"https://img.belet.me/actors/6832/da42f983-95ab-49e8-99fa-10535662a867.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 147,
+        "name": "Кристина Риччи",
+        "image": "{\"url\":\"https://img.belet.me/actors/147/f0f9a6b0-d5e6-4e75-9d84-6319981a6a73.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 41621,
+        "name": "Джейми МакШейн",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 524,
+        "name": "Стив Бушеми",
+        "image": "{\"url\":\"https://img.belet.me/actors/524/c472bd9e-653d-44a4-80e6-dd289176da74.jpg\",\"width\":600,\"height\":800}"
+      },
+      {
+        "id": 18255,
+        "name": "Джоанна Ламли",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 64388,
+        "name": "Чезар Грумэзеску",
+        "image": "{\"url\":\"https://img.belet.me/actors/64388/f895a85a-2407-42d5-8017-6d9f0eb33786.jpg\",\"width\":600,\"height\":800}"
+      },
+      {
+        "id": 3624,
+        "name": "Билли Пайпер",
+        "image": "{\"url\":\"https://img.belet.me/actors/3624/d39e9ec6-21c5-4643-9a14-759278c8247f.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 19183,
+        "name": "Перси Хайнс Уайт",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 17795,
+        "name": "Люсиус Хойос",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 6803,
+        "name": "Фред Армисен",
+        "image": "{\"url\":\"https://img.belet.me/actors/6803/f3a6adf0-4fb5-4446-ae8f-ac4d0e7d1959.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 4474,
+        "name": "Уильям Хьюстон",
+        "image": "{\"url\":\"https://img.belet.me/actors/4474/40339682-780f-47d9-974c-f2feaea0dae9.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 5068,
+        "name": "Энтони Майкл Холл",
+        "image": "{\"url\":\"https://img.belet.me/actors/5068/401c9474-0760-494f-aa2a-ff38c42d2701.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 57746,
+        "name": "Хейли Джоэл Осмент",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 9971,
+        "name": "Кэтрин Зета-Джонс",
+        "image": "{\"url\":\"https://img.belet.me/actors/9971/97f17f00-797d-4773-8a5b-3e175cb7b418.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 12437,
+        "name": "Луис Гусман",
+        "image": "{\"url\":\"https://img.belet.me/actors/12437/d8854eae-8475-4a4a-8d66-179791f7b28e.jpg\",\"width\":1024,\"height\":1024}"
+      }
+    ],
+    "directors": [
+      {
+        "id": 294,
+        "name": "Тим Бёртон",
+        "image": "{\"url\":\"https://img.belet.me/actors/294/fdf6b844-c8bb-4e87-b191-9ef77bac176f.jpg\",\"width\":1024,\"height\":1024}"
+      },
+      {
+        "id": 30758,
+        "name": "Джеймс Маршалл",
+        "image": "{\"url\":\"https://img.belet.me/actors/30758/d726da98-6dd7-445f-a036-e2ad51551066.jpg\",\"width\":600,\"height\":800}"
+      },
+      {
+        "id": 24566,
+        "name": "Пако Кабесас",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      },
+      {
+        "id": 58686,
+        "name": "Ганджа Монтейру",
+        "image": "{\"url\": \"https://img.belet.me/actors/default/default_actor.jpg\", \"width\":600, \"height\":600}"
+      }
+    ],
+    "seasons": [
+      {
+        "id": 274226,
+        "name": "1 Сезон"
+      },
+      {
+        "id": 117659,
+        "name": "2 Сезон"
+      }
+    ],
+    "trailers": null,
+    "studios": [
+      {
+        "id": 649,
+        "name": "MGM Television"
+      }
+    ],
+    "thumbnails": {
+      "default": {
+        "url": "https://img.belet.me/images/117658/vertical/66dcf961-8ba2-4b3c-9ebd-611074754d35.webp",
+        "width": 640,
+        "height": 900
+      },
+      "high": {
+        "url": "https://img.belet.me/images/117658/vertical/d5c08ebb-b1b3-4cc4-801f-dba42381ea79.webp",
+        "width": 640,
+        "height": 900
+      },
+      "medium": {
+        "url": "https://img.belet.me/images/117658/vertical/7bf494df-788d-49ed-b8c9-c99c910d1a1b.webp",
+        "width": 420,
+        "height": 654
+      },
+      "standard": {
+        "url": "https://img.belet.me/images/117658/vertical/8eb7cc19-2930-4800-bb51-8e1c37b51416.webp",
+        "width": 280,
+        "height": 400
+      }
+    },
+    "images": {
+      "vertical": {
+        "default": {
+          "url": "https://img.belet.me/images/117658/vertical/66dcf961-8ba2-4b3c-9ebd-611074754d35.webp",
+          "width": 640,
+          "height": 900
+        },
+        "high": {
+          "url": "https://img.belet.me/images/117658/vertical/d5c08ebb-b1b3-4cc4-801f-dba42381ea79.webp",
+          "width": 640,
+          "height": 900
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/117658/vertical/7bf494df-788d-49ed-b8c9-c99c910d1a1b.webp",
+          "width": 420,
+          "height": 654
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/117658/vertical/8eb7cc19-2930-4800-bb51-8e1c37b51416.webp",
+          "width": 280,
+          "height": 400
+        }
+      },
+      "vertical_without_name": {
+        "default": {
+          "url": "https://img.belet.me/images/117658/vertical_without_name/909f8704-b57a-4407-8a7b-f6e89bbf8b4e.webp",
+          "width": 640,
+          "height": 900
+        },
+        "high": {
+          "url": "https://img.belet.me/images/117658/vertical_without_name/a96fee1c-a16a-4fb0-ab62-154bcb5d53df.webp",
+          "width": 640,
+          "height": 900
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/117658/vertical_without_name/7fc6bc9a-db75-4064-b558-aefeb8aa69ea.webp",
+          "width": 420,
+          "height": 654
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/117658/vertical_without_name/7345eb2f-0901-426b-8b93-231928ce7d72.webp",
+          "width": 280,
+          "height": 400
+        }
+      },
+      "horizontal_without_name": {
+        "default": {
+          "url": "https://img.belet.me/images/117658/horizontal_without_name/89eb24a5-237a-44d8-accd-1067fcd09df9.webp",
+          "width": 1920,
+          "height": 1080
+        },
+        "high": {
+          "url": "https://img.belet.me/images/117658/horizontal_without_name/b7136ab8-a0e3-46d2-bad5-84fb7c734686.webp",
+          "width": 1280,
+          "height": 720
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/117658/horizontal_without_name/9c90565e-10c8-4a6f-8fda-784c5e997b6a.webp",
+          "width": 854,
+          "height": 480
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/117658/horizontal_without_name/d3f4d9f0-d7aa-47bf-91f2-46e567ebf253.webp",
+          "width": 640,
+          "height": 360
+        }
+      },
+      "horizontal_with_name": {
+        "default": {
+          "url": "https://img.belet.me/images/117658/horizontal_with_name/acbf2605-387c-473f-9e7f-990fd569803e.webp",
+          "width": 1920,
+          "height": 1080
+        },
+        "high": {
+          "url": "https://img.belet.me/images/117658/horizontal_with_name/c237f360-9c79-48b8-8f2d-ea3e5b964f3b.webp",
+          "width": 1280,
+          "height": 720
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/117658/horizontal_with_name/a4c27932-1990-4ced-a64e-64cb06c9bd0d.webp",
+          "width": 854,
+          "height": 480
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/117658/horizontal_with_name/106a384e-387a-42be-8b55-1cfe68fcbec3.webp",
+          "width": 640,
+          "height": 360
+        }
+      },
+      "name": {
+        "url": "https://img.belet.me/images/117658/9c7a5d2f-319d-4feb-84b5-403c97c62ed9.png",
+        "width": 592,
+        "height": 250
+      }
+    },
+    "last_episode_info": {
+      "episode_watch_time": 651.613,
+      "episode_id": 117662,
+      "season_id": 117659,
+      "episode_name": "3. Великие беды",
+      "episode_duration": "59",
+      "episode_position": 3,
+      "season_position": 2
+    },
+    "media_info": {
+      "audio_info": [
+        {
+          "studio_name": "Original Voice",
+          "language": "Iňlisçe",
+          "abbreviated": "eng",
+          "voice_type": 1
+        },
+        {
+          "studio_name": "Official Dubbing",
+          "language": "Rusça",
+          "abbreviated": "rus",
+          "voice_type": 2
+        }
+      ],
+      "subtitle_info": [
+        {
+          "language": "Iňlisçe"
+        },
+        {
+          "language": "Rusça"
+        }
+      ]
+    },
+    "parent_id": 0,
+    "rating_kp": 7.9,
+    "rating_imdb": 8,
+    "watch_time": 651.613,
+    "like": false,
+    "dislike": false,
+    "favorites": false,
+    "for_kids": false
+  }
+}

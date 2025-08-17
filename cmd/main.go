@@ -5,6 +5,7 @@ import (
 	"film-downloader/internal/config"
 	"film-downloader/internal/cron"
 	"film-downloader/internal/database"
+	"film-downloader/internal/repositories"
 	"fmt"
 	"log"
 	"os"
@@ -20,7 +21,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(1)
-	err := cron.DownloadWithID(ctx, "117662", "117659", "117658", cfg, db)
+	repo := repositories.NewMovieRepository(db)
+	err := cron.DownloadWithID(ctx, "117662", "117659", "117658", cfg, repo)
 
 	if err != nil {
 		log.Fatal(err)

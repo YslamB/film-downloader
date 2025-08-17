@@ -5,12 +5,12 @@ import (
 	"film-downloader/internal/config"
 	"film-downloader/internal/downloader"
 	"film-downloader/internal/models"
+	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func CheckDaily(ctx context.Context, wg *sync.WaitGroup) {
@@ -40,11 +40,33 @@ func CheckWithStatus() {
 
 }
 
-func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg *config.Config, db *pgxpool.Pool) error {
+func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg *config.Config, repo *repositories.MovieRepository) error {
 	var movies []models.Movie
 	var err error
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
+		movie, err := requests.GetMovieData(ctx, filmID, cfg)
+
+		if err != nil {
+			return err
+		}
+
+		exists, err := repo.CheckMovieExists(strconv.Itoa(movie.Film.ID))
+
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			return fmt.Errorf("movie already exists")
+		}
+
+		err = repo.CreateMovie(movie)
+
+		if err != nil {
+			return err
+		}
+
 		source, err := requests.GetFilmSourceURL(ctx, filmID, cfg)
 
 		if err != nil {
