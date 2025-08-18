@@ -15,7 +15,7 @@ type MovieRepository struct {
 }
 
 const (
-	getMovieURL      = "http://95.85.126.217:5050/api/v1/admin/movies/%s"
+	getMovieURL      = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
 	getCategoryIDURL = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories/%d"
 	getGenreIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
 	getCountryIDURL  = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
@@ -29,79 +29,77 @@ func NewMovieRepository(accessToken string) *MovieRepository {
 }
 
 func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) (bool, error) {
-	// req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(getMovieURL, movieID), nil)
+	// 10181 is exists
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(getMovieURL, movieID), nil)
 
-	// if err != nil {
-	// 	return false, fmt.Errorf("failed to create request: %w", err)
-	// }
+	if err != nil {
+		return false, fmt.Errorf("failed to create request: %w", err)
+	}
 
-	// req.Header.Set("Authorization", r.accessToken)
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	resp, err := client.Do(req)
 
-	// client := &http.Client{
-	// 	Timeout: time.Second * 10,
-	// }
-	// resp, err := client.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("request failed: %w", err)
+	}
 
-	// if err != nil {
-	// 	return false, fmt.Errorf("request failed: %w", err)
-	// }
+	defer resp.Body.Close()
 
-	// defer resp.Body.Close()
-
-	// if resp.StatusCode != http.StatusOK {
-	// 	return false, fmt.Errorf("bad response: %s", resp.Status)
-	// }
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
+	}
 
 	return false, nil
 }
 
 func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (int, error) {
-	// body := map[string]interface{}{
-	// 	"name_tm":  "test",
-	// 	"name_ru":  "test",
-	// 	"name_en":  "test",
-	// 	"belet_id": categoryID,
-	// }
+	body := map[string]interface{}{
+		"name_tm":  "test",
+		"name_ru":  "test",
+		"name_en":  "test",
+		"belet_id": categoryID,
+	}
 
-	// bodyBytes, err := json.Marshal(body)
+	bodyBytes, err := json.Marshal(body)
 
-	// if err != nil {
-	// 	return 0, fmt.Errorf("failed to marshal request body: %w", err)
-	// }
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal request body: %w", err)
+	}
 
-	// req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf(getCategoryIDURL, categoryID), bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf(getCategoryIDURL, categoryID), bytes.NewBuffer(bodyBytes))
 
-	// if err != nil {
-	// 	return 0, fmt.Errorf("failed to create request: %w", err)
-	// }
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
 
-	// req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.accessToken)
 
-	// client := &http.Client{
-	// 	Timeout: time.Second * 10,
-	// }
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
 
-	// resp, err := client.Do(req)
+	resp, err := client.Do(req)
 
-	// if err != nil {
-	// 	return 0, fmt.Errorf("request failed: %w", err)
-	// }
+	if err != nil {
+		return 0, fmt.Errorf("request failed: %w", err)
+	}
 
-	// defer resp.Body.Close()
+	defer resp.Body.Close()
 
-	// if resp.StatusCode != http.StatusOK {
-	// 	return 0, fmt.Errorf("bad response: %s", resp.Status)
-	// }
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("bad response: %s", resp.Status)
+	}
 
-	// var category models.GetIDResponse
-	// err = json.NewDecoder(resp.Body).Decode(&category)
+	var category models.GetIDResponse
+	err = json.NewDecoder(resp.Body).Decode(&category)
 
-	// if err != nil {
-	// 	return 0, fmt.Errorf("failed to decode response: %w", err)
-	// }
+	if err != nil {
+		return 0, fmt.Errorf("failed to decode response: %w", err)
+	}
 
-	// return category.ID, nil
-	return 1, nil
+	return category.ID, nil
 }
 
 func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]int, error) {
@@ -214,9 +212,9 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 
 	for i := range actors {
 		body := map[string]interface{}{
-			"name_tm": actors[i].Name,
-			"name_ru": actors[i].Name,
-			"name_en": actors[i].Name,
+			"bio":       actors[i].Name,
+			"full_name": actors[i].Name,
+			"image_id":  1,
 		}
 
 		bodyBytes, err := json.Marshal(body)
