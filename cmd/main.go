@@ -4,7 +4,6 @@ import (
 	"context"
 	"film-downloader/internal/config"
 	"film-downloader/internal/cron"
-	"film-downloader/internal/database"
 	"film-downloader/internal/repositories"
 	"fmt"
 	"log"
@@ -17,11 +16,10 @@ import (
 func main() {
 	wg := sync.WaitGroup{}
 	cfg := config.Init()
-	db := database.Init(cfg)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(1)
-	repo := repositories.NewMovieRepository(db)
+	repo := repositories.NewMovieRepository(cfg.AccessToken)
 	err := cron.DownloadWithID(ctx, "117662", "117659", "117658", cfg, repo)
 
 	if err != nil {

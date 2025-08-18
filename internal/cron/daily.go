@@ -45,23 +45,47 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	var err error
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
-		movie, err := requests.GetMovieData(ctx, filmID, cfg)
+		movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
 
 		if err != nil {
 			return err
 		}
 
-		exists, err := repo.CheckMovieExists(strconv.Itoa(movie.Film.ID))
+		exists, err := repo.CheckMovieExists(ctx, strconv.Itoa(movieRes.Film.ID))
 
 		if err != nil {
 			return err
 		}
 
 		if exists {
-			return fmt.Errorf("movie already exists")
+			return fmt.Errorf("movieRes already exists")
 		}
 
-		err = repo.CreateMovie(movie)
+		movieRes.Film.CategoryID, err = repo.GetCategoryID(ctx, movieRes.Film.CategoryID)
+
+		if err != nil {
+			return err
+		}
+
+		genreIDs, err := repo.GetGenreIDs(ctx, movieRes.Film.Genres)
+
+		if err != nil {
+			return err
+		}
+
+		countryIDs, err := repo.GetCountryIDs(ctx, movieRes.Film.Countries)
+
+		if err != nil {
+			return err
+		}
+
+		actorIDs, err := repo.GetActorIDs(ctx, movieRes.Film.Actors)
+
+		if err != nil {
+			return err
+		}
+
+		err = repo.CreateMovie(ctx, movieRes, genreIDs, countryIDs, actorIDs)
 
 		if err != nil {
 			return err
