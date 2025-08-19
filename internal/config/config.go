@@ -18,6 +18,13 @@ type Config struct {
 	DB_PASSWORD  string
 	DB_NAME      string
 	DB_MAX_CONNS int32
+
+	MINIO_ENDPOINT   string
+	MINIO_ACCESS_KEY string
+	MINIO_SECRET_KEY string
+	MINIO_SECURE     bool
+	MINIO_BUCKET     string
+	MINIO_WORKERS    int32
 }
 
 func Init() *Config {
@@ -36,7 +43,28 @@ func Init() *Config {
 	cfg.DB_NAME = loadEnvVariable("DB_NAME")
 	cfg.DB_MAX_CONNS = loadEnvVariableInt32("DB_MAX_CONNS")
 	cfg.SecureKey = "w3r1Sec4re_Token_"
+
+	cfg.MINIO_ENDPOINT = loadEnvVariable("MINIO_ENDPOINT")
+	cfg.MINIO_ACCESS_KEY = loadEnvVariable("MINIO_ACCESS_KEY")
+	cfg.MINIO_SECRET_KEY = loadEnvVariable("MINIO_SECRET_KEY")
+	cfg.MINIO_SECURE = loadEnvVariableBool("MINIO_SECURE")
+	cfg.MINIO_BUCKET = loadEnvVariable("MINIO_BUCKET")
+	cfg.MINIO_WORKERS = loadEnvVariableInt32("MINIO_WORKERS")
 	return &cfg
+}
+
+func loadEnvVariableBool(key string) bool {
+	value, exists := os.LookupEnv(key)
+	parsedValue, err := strconv.ParseBool(value)
+
+	if !exists || value == "" {
+		log.Fatalf("Environment variable %s is required but not set", key)
+	}
+
+	if err != nil {
+		log.Fatalf("Invalid value for %s: %v", key, err)
+	}
+	return parsedValue
 }
 
 func loadEnvVariableInt32(key string) int32 {

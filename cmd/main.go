@@ -20,7 +20,7 @@ func main() {
 
 	wg.Add(1)
 	repo := repositories.NewMovieRepository(cfg.AccessToken)
-	err := cron.DownloadWithID(ctx, "117662", "117659", "117658", cfg, repo)
+	err := cron.DownloadWithID(ctx, "", "", "443664", cfg, repo)
 
 	if err != nil {
 		log.Fatal(err)

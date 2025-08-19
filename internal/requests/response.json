@@ -519,3 +519,167 @@
     "for_kids": false
   }
 }
+
+3 futbol
+{
+  "status": "ok",
+  "message": "",
+  "film": {
+    "id": 424793,
+    "year": 2025,
+    "type_id": 1,
+    "category_id": 39,
+    "name": "ПСЖ VS Бавария",
+    "age": "6",
+    "duration": "5",
+    "language": "Rusça",
+    "description": "Клубный чемпионат мира -  Обзор матча 1/4 финал",
+    "genres": [
+      "Sport"
+    ],
+    "countries": null,
+    "actors": null,
+    "directors": null,
+    "seasons": null,
+    "trailers": null,
+    "studios": null,
+    "thumbnails": {
+      "default": {
+        "url": "https://img.belet.me/images/424793/vertical/000d0e65-f049-4b6a-b4e1-44bca67120af.webp",
+        "width": 640,
+        "height": 900
+      },
+      "high": {
+        "url": "https://img.belet.me/images/424793/vertical/aac49003-42ee-4186-9441-ce8cde18b935.webp",
+        "width": 640,
+        "height": 900
+      },
+      "medium": {
+        "url": "https://img.belet.me/images/424793/vertical/c545a756-384f-47e5-9435-3a0c2f8af390.webp",
+        "width": 420,
+        "height": 654
+      },
+      "standard": {
+        "url": "https://img.belet.me/images/424793/vertical/76313af6-49fc-446a-841b-4c85fe8db123.webp",
+        "width": 280,
+        "height": 400
+      }
+    },
+    "images": {
+      "vertical": {
+        "default": {
+          "url": "https://img.belet.me/images/424793/vertical/000d0e65-f049-4b6a-b4e1-44bca67120af.webp",
+          "width": 640,
+          "height": 900
+        },
+        "high": {
+          "url": "https://img.belet.me/images/424793/vertical/aac49003-42ee-4186-9441-ce8cde18b935.webp",
+          "width": 640,
+          "height": 900
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/424793/vertical/c545a756-384f-47e5-9435-3a0c2f8af390.webp",
+          "width": 420,
+          "height": 654
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/424793/vertical/76313af6-49fc-446a-841b-4c85fe8db123.webp",
+          "width": 280,
+          "height": 400
+        }
+      },
+      "vertical_without_name": {
+        "default": {
+          "url": "https://img.belet.me/images/424793/vertical-without-name/08626ac6-9d74-49b4-b54c-764865228e9e.webp",
+          "width": 640,
+          "height": 900
+        },
+        "high": {
+          "url": "https://img.belet.me/images/424793/vertical-without-name/1473a2bc-e815-4e3a-bbb7-d36fb298c2dc.webp",
+          "width": 640,
+          "height": 900
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/424793/vertical-without-name/71700f40-af3f-4e50-9db6-bcab3f993479.webp",
+          "width": 420,
+          "height": 654
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/424793/vertical-without-name/e8819273-635c-4289-a951-8bd16a217eae.webp",
+          "width": 280,
+          "height": 400
+        }
+      },
+      "horizontal_without_name": {
+        "default": {
+          "url": "https://img.belet.me/images/424793/horizontal-without-name/84d04709-e70e-4425-841e-58292d05e150.webp",
+          "width": 1920,
+          "height": 1080
+        },
+        "high": {
+          "url": "https://img.belet.me/images/424793/horizontal-without-name/2c83c5c8-37a8-47fd-843a-4a67198714e9.webp",
+          "width": 1280,
+          "height": 720
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/424793/horizontal-without-name/fc1ed93f-c756-465c-9763-5744b7338ed1.webp",
+          "width": 854,
+          "height": 480
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/424793/horizontal-without-name/e59b6347-6d66-445d-972b-e3b7f103f64c.webp",
+          "width": 640,
+          "height": 360
+        }
+      },
+      "horizontal_with_name": {
+        "default": {
+          "url": "https://img.belet.me/images/424793/horizontal-with-name/59e9c842-47eb-4d16-95b6-1369784c3fb1.webp",
+          "width": 1920,
+          "height": 1080
+        },
+        "high": {
+          "url": "https://img.belet.me/images/424793/horizontal-with-name/fd4fe11f-38ac-4e6e-8126-8740732b18b5.webp",
+          "width": 1280,
+          "height": 720
+        },
+        "medium": {
+          "url": "https://img.belet.me/images/424793/horizontal-with-name/5c010a91-7ac7-44f8-810e-89dc7a3f9f57.webp",
+          "width": 854,
+          "height": 480
+        },
+        "standard": {
+          "url": "https://img.belet.me/images/424793/horizontal-with-name/33a7ce1a-4660-4911-8f0b-0b34c8546033.webp",
+          "width": 640,
+          "height": 360
+        }
+      },
+      "name": {
+        "url": "https://img.belet.me/images/424793/e62e66dd-4cae-42e8-a543-3d8881471478.png",
+        "width": 525,
+        "height": 250
+      }
+    },
+    "last_episode_info": {
+      "episode_watch_time": 0,
+      "episode_id": 0,
+      "season_id": 0,
+      "episode_name": "",
+      "episode_duration": "",
+      "episode_position": null,
+      "season_position": null
+    },
+    "media_info": {
+      "audio_info": null,
+      "subtitle_info": null
+    },
+    "parent_id": 0,
+    "rating_kp": 0,
+    "rating_imdb": 0,
+    "watch_time": 0,
+    "like": false,
+    "dislike": false,
+    "favorites": false,
+    "for_kids": false
+  }
+}

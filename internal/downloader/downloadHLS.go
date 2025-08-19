@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func DownloadHLS(movie models.Movie, cfg *config.Config) {
+func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 	os.MkdirAll(movie.Name, 0755)
 
 	// Download master playlist once and store content in memory
@@ -27,14 +27,14 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) {
 	// Read master playlist content into memory
 	masterContent, err := io.ReadAll(masterBody)
 	if err != nil {
-		log.Fatalf("Failed to read master playlist: %v", err)
+		return fmt.Errorf("failed to read master playlist: %v", err)
 	}
 
 	// Parse URLs from the in-memory content
 	baseURL, err := url.Parse(movie.Source)
 
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to parse base URL: %v", err)
 	}
 
 	var videoM3U8 string
@@ -71,7 +71,7 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) {
 	}
 
 	if videoM3U8 == "" {
-		log.Fatal("No video playlist found.")
+		return fmt.Errorf("no video playlist found")
 	}
 
 	// Now download all media playlists immediately to avoid expiration
@@ -91,6 +91,7 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) {
 	// Generate local master playlist
 	fmt.Println("Generating local master playlist...")
 	generateLocalMasterPlaylist(movie.Name, audioM3U8s, subtitleM3U8s)
+	return nil
 }
 
 func downloadMediaPlaylist(name, playlistURL, folder, accessToken string) []string {

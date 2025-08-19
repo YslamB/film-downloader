@@ -7,8 +7,8 @@ import (
 	"film-downloader/internal/models"
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
+	"film-downloader/internal/utils"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -45,63 +45,18 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	var err error
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
-		movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
+		movieSource, err := DownloadMovieWithID(ctx, filmID, cfg, repo)
 
 		if err != nil {
 			return err
 		}
-
-		exists, err := repo.CheckMovieExists(ctx, strconv.Itoa(movieRes.Film.ID))
-
-		if err != nil {
-			return err
-		}
-
-		if exists {
-			return fmt.Errorf("movieRes already exists")
-		}
-
-		movieRes.Film.CategoryID, err = repo.GetCategoryID(ctx, movieRes.Film.CategoryID)
-
-		if err != nil {
-			return err
-		}
-
-		genreIDs, err := repo.GetGenreIDs(ctx, movieRes.Film.Genres)
-
-		if err != nil {
-			return err
-		}
-
-		countryIDs, err := repo.GetCountryIDs(ctx, movieRes.Film.Countries)
-
-		if err != nil {
-			return err
-		}
-
-		actorIDs, err := repo.GetActorIDs(ctx, movieRes.Film.Actors)
-
-		if err != nil {
-			return err
-		}
-
-		err = repo.CreateMovie(ctx, movieRes, genreIDs, countryIDs, actorIDs)
-
-		if err != nil {
-			return err
-		}
-
-		source, err := requests.GetFilmSourceURL(ctx, filmID, cfg)
-
-		if err != nil {
-			return err
-		}
-
-		movies = append(movies, source)
+		movies = append(movies, movieSource)
 	}
 
 	if seasonID != "" {
+		fmt.Println("🔍 Checking season with ID:", seasonID)
 		movies, err = requests.GetEpisodesWithSeasonID(seasonID, episodeID, cfg)
+		time.Sleep(1 * time.Second)
 
 		if err != nil {
 			return err
@@ -111,7 +66,21 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	fmt.Println("✅ Received Source files...", movies)
 
 	for i := range movies {
-		downloader.DownloadHLS(movies[i], cfg)
+		err := downloader.DownloadHLS(movies[i], cfg)
+
+		if err != nil {
+			return err
+		}
+
+		err = utils.UploadFolderToMinio(
+			movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
+			cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY, cfg.MINIO_SECRET_KEY,
+			cfg.MINIO_SECURE, int(cfg.MINIO_WORKERS),
+		)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
