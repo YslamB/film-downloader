@@ -14,6 +14,7 @@ import (
 
 func uploadFile(ctx context.Context, client *minio.Client, bucketName, localPath, objectName string) error {
 	_, err := client.FPutObject(ctx, bucketName, objectName, localPath, minio.PutObjectOptions{})
+
 	if err != nil {
 		return fmt.Errorf("failed to upload %s: %w", objectName, err)
 	}
@@ -90,5 +91,7 @@ func UploadFolderToMinio(localFolderPath, prefix, bucketName, endpoint, accessKe
 	close(fileChan)
 
 	wg.Wait()
+	masterPath := filepath.Join("movies", localFolderPath, "master.m3u8")
+	fmt.Println("Master path:", masterPath)
 	return nil
 }

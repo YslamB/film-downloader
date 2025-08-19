@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func DownloadMovieWithID(ctx context.Context, filmID string, cfg *config.Config, repo *repositories.MovieRepository) (models.Movie, error) {
+func DownloadMovieSourceWithID(ctx context.Context, filmID string, cfg *config.Config, repo *repositories.MovieRepository) (models.Movie, error) {
 	var movieSource models.Movie
 	movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
 

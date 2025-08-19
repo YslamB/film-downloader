@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func GetEpisodesWithSeasonID(seasonID, episodeID string, cfg *config.Config) ([]models.Movie, error) {
+func GetEpisodesSourceWithSeasonID(seasonID, episodeID string, cfg *config.Config) ([]models.Movie, error) {
 	var movies []models.Movie
 	url := fmt.Sprintf("https://film.beletapis.com/api/v2/episodes?seasonId=%s", seasonID)
 	req, err := http.NewRequest("GET", url, nil)

@@ -45,7 +45,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	var err error
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
-		movieSource, err := DownloadMovieWithID(ctx, filmID, cfg, repo)
+		movieSource, err := DownloadMovieSourceWithID(ctx, filmID, cfg, repo)
 
 		if err != nil {
 			return err
@@ -55,7 +55,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 
 	if seasonID != "" {
 		fmt.Println("🔍 Checking season with ID:", seasonID)
-		movies, err = requests.GetEpisodesWithSeasonID(seasonID, episodeID, cfg)
+		movies, err = requests.GetEpisodesSourceWithSeasonID(seasonID, episodeID, cfg)
 		time.Sleep(1 * time.Second)
 
 		if err != nil {
