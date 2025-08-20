@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type MovieRepository struct {
@@ -69,10 +71,10 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (int, error) {
 	fmt.Println("🔍 Getting category ID:", categoryID)
 	body := map[string]interface{}{
-		"name_tm":  "test",
-		"name_ru":  "test",
-		"name_en":  "test",
-		"belet_id": categoryID,
+		"name_tm": uuid.New().String(),
+		"name_ru": uuid.New().String(),
+		"name_en": uuid.New().String(),
+		"ext_id":  categoryID,
 	}
 
 	bodyBytes, err := json.Marshal(body)
