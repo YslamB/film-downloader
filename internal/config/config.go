@@ -17,14 +17,14 @@ type Config struct {
 	DB_USER      string
 	DB_PASSWORD  string
 	DB_NAME      string
-	DB_MAX_CONNS int32
+	DB_MAX_CONNS int
 
 	MINIO_ENDPOINT   string
 	MINIO_ACCESS_KEY string
 	MINIO_SECRET_KEY string
 	MINIO_SECURE     bool
 	MINIO_BUCKET     string
-	MINIO_WORKERS    int32
+	MINIO_WORKERS    int
 }
 
 func Init() *Config {
@@ -41,7 +41,7 @@ func Init() *Config {
 	cfg.DB_USER = loadEnvVariable("DB_USER")
 	cfg.DB_PASSWORD = loadEnvVariable("DB_PASSWORD")
 	cfg.DB_NAME = loadEnvVariable("DB_NAME")
-	cfg.DB_MAX_CONNS = loadEnvVariableInt32("DB_MAX_CONNS")
+	cfg.DB_MAX_CONNS = loadEnvVariableInt("DB_MAX_CONNS")
 	cfg.SecureKey = "w3r1Sec4re_Token_"
 
 	cfg.MINIO_ENDPOINT = loadEnvVariable("MINIO_ENDPOINT")
@@ -49,7 +49,7 @@ func Init() *Config {
 	cfg.MINIO_SECRET_KEY = loadEnvVariable("MINIO_SECRET_KEY")
 	cfg.MINIO_SECURE = loadEnvVariableBool("MINIO_SECURE")
 	cfg.MINIO_BUCKET = loadEnvVariable("MINIO_BUCKET")
-	cfg.MINIO_WORKERS = loadEnvVariableInt32("MINIO_WORKERS")
+	cfg.MINIO_WORKERS = loadEnvVariableInt("MINIO_WORKERS")
 	return &cfg
 }
 
@@ -67,7 +67,7 @@ func loadEnvVariableBool(key string) bool {
 	return parsedValue
 }
 
-func loadEnvVariableInt32(key string) int32 {
+func loadEnvVariableInt(key string) int {
 	value, exists := os.LookupEnv(key)
 	parsedValue, err := strconv.ParseInt(value, 10, 32)
 
@@ -78,7 +78,7 @@ func loadEnvVariableInt32(key string) int32 {
 	if err != nil {
 		log.Fatalf("Invalid value for %s: %v", key, err)
 	}
-	return int32(parsedValue)
+	return int(parsedValue)
 }
 
 func loadEnvVariable(key string) string {

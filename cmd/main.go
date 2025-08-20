@@ -19,7 +19,11 @@ func main() {
 	wg.Add(1)
 	// repo := repositories.NewMovieRepository(cfg.AccessToken)
 	// err := cron.DownloadWithID(ctx, "", "", "443664", cfg, repo)
-	err := utils.UploadFolderToMinio("06a94efe44738841b45843fd245bfffb", "06a94efe44738841b45843fd245bfffb", cfg.MINIO_BUCKET, cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY, cfg.MINIO_SECRET_KEY, cfg.MINIO_SECURE, 10)
+	err := utils.UploadFolderToMinio(
+		"test/fd29222081571ec9eb1df30ec3956cf7/video/480p", "fd29222081571ec9eb1df30ec3956cf7/video/480p",
+		cfg.MINIO_BUCKET, cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY,
+		cfg.MINIO_SECRET_KEY, cfg.MINIO_SECURE, 10,
+	)
 
 	if err != nil {
 		log.Fatal(err)

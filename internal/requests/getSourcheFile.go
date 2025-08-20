@@ -15,8 +15,8 @@ import (
 func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config) (models.Movie, error) {
 	var movie models.Movie
 	apiURL := fmt.Sprintf("https://film.beletapis.com/api/v2/files/%s?type=1", filmID)
-
 	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
+
 	if err != nil {
 		return movie, fmt.Errorf("failed to create request: %w", err)
 	}

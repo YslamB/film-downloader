@@ -75,7 +75,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		err = utils.UploadFolderToMinio(
 			movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
 			cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY, cfg.MINIO_SECRET_KEY,
-			cfg.MINIO_SECURE, int(cfg.MINIO_WORKERS),
+			cfg.MINIO_SECURE, cfg.MINIO_WORKERS,
 		)
 
 		if err != nil {

@@ -13,7 +13,7 @@ import (
 func Init(cfg *config.Config) *pgxpool.Pool {
 	connectionString := buildConnectionString(cfg)
 	dbCfg, err := pgxpool.ParseConfig(connectionString)
-	dbCfg.MaxConns = cfg.DB_MAX_CONNS
+	dbCfg.MaxConns = int32(cfg.DB_MAX_CONNS)
 
 	if err != nil {
 		log.Fatalf("Unable to parse database config💊: %v\n", err)

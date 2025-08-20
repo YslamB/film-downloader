@@ -19,18 +19,15 @@ import (
 func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 	os.MkdirAll(movie.Name, 0755)
 
-	// Download master playlist once and store content in memory
-	fmt.Println("Downloading master playlist...")
 	masterBody := downloadFile(movie.Source, cfg.AccessToken)
 	defer masterBody.Close()
 
-	// Read master playlist content into memory
 	masterContent, err := io.ReadAll(masterBody)
+
 	if err != nil {
 		return fmt.Errorf("failed to read master playlist: %v", err)
 	}
 
-	// Parse URLs from the in-memory content
 	baseURL, err := url.Parse(movie.Source)
 
 	if err != nil {
@@ -41,7 +38,6 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 	audioM3U8s := make(map[string]string)
 	subtitleM3U8s := make(map[string]string)
 
-	// Use the in-memory content for parsing
 	scanner := bufio.NewScanner(bytes.NewReader(masterContent))
 
 	for scanner.Scan() {
@@ -74,22 +70,16 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 		return fmt.Errorf("no video playlist found")
 	}
 
-	// Now download all media playlists immediately to avoid expiration
-	fmt.Println("Downloading video segments...")
 	downloadMediaPlaylist(movie.Name, videoM3U8, "video/1080p", cfg.AccessToken)
 
 	for lang, audioURL := range audioM3U8s {
-		fmt.Printf("Downloading audio segments (%s)...\n", lang)
 		downloadMediaPlaylistWithLang(movie.Name, audioURL, "audio", lang, cfg.AccessToken)
 	}
 
 	for lang, subtitleURL := range subtitleM3U8s {
-		fmt.Printf("Downloading subtitle segments (%s)...\n", lang)
 		downloadMediaPlaylistWithLang(movie.Name, subtitleURL, "sub", lang, cfg.AccessToken)
 	}
 
-	// Generate local master playlist
-	fmt.Println("Generating local master playlist...")
 	generateLocalMasterPlaylist(movie.Name, audioM3U8s, subtitleM3U8s)
 	return nil
 }
@@ -98,17 +88,16 @@ func downloadMediaPlaylist(name, playlistURL, folder, accessToken string) []stri
 	u, _ := url.Parse(playlistURL)
 	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()
-
 	dir := filepath.Join(name, folder)
 	os.MkdirAll(dir, 0755)
-
 	localM3U8 := filepath.Join(dir, "1080p_playlist.m3u8")
 	out, err := os.Create(localM3U8)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer out.Close()
 
+	defer out.Close()
 	scanner := bufio.NewScanner(resp)
 	segmentIndex := 0
 	var downloaded []string
@@ -123,8 +112,8 @@ func downloadMediaPlaylist(name, playlistURL, folder, accessToken string) []stri
 
 		segmentIndex++
 		segmentURL := resolveURL(u, line)
-
 		var fileExt string
+
 		if strings.HasPrefix(folder, "subtitle_") {
 
 			if strings.Contains(line, ".") {
@@ -291,14 +280,12 @@ func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map
 	}
 	defer out.Close()
 
-	// Write M3U8 header
 	out.WriteString("#EXTM3U\n")
 
-	// Write audio media entries
 	if len(audioM3U8s) > 0 {
 		isFirst := true
 		for lang := range audioM3U8s {
-			// Set first audio as default
+
 			defaultStr := "NO"
 			if isFirst {
 				defaultStr = "YES"
@@ -310,7 +297,6 @@ func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map
 		out.WriteString("\n")
 	}
 
-	// Write subtitle media entries
 	if len(subtitleM3U8s) > 0 {
 		for lang := range subtitleM3U8s {
 			out.WriteString(fmt.Sprintf("#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",LANGUAGE=\"%s\",NAME=\"%s\",DEFAULT=NO,URI=\"sub/%s_playlist.m3u8\"\n",
@@ -319,7 +305,6 @@ func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map
 		out.WriteString("\n")
 	}
 
-	// Write video stream info
 	audioGroup := ""
 	subsGroup := ""
 	if len(audioM3U8s) > 0 {
@@ -329,7 +314,7 @@ func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map
 		subsGroup = ",SUBTITLES=\"subs\""
 	}
 
-	out.WriteString(fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=5128000,CODECS=\"avc1.640028,mp4a.40.2\"%s%s\n", audioGroup, subsGroup))
+	out.WriteString(fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=5128000,RESOLUTION=1920x1080,CODECS=\"avc1.640028,mp4a.40.2\"%s%s\n", audioGroup, subsGroup))
 	out.WriteString("video/1080p/1080p_playlist.m3u8\n")
 
 	fmt.Printf("Generated local master playlist: %s\n", masterPath)
