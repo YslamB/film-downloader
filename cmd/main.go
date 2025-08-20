@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"film-downloader/internal/config"
-	"film-downloader/internal/utils"
+	"film-downloader/internal/cron"
+	"film-downloader/internal/repositories"
 	"fmt"
 	"log"
 	"os"
@@ -14,16 +16,16 @@ import (
 func main() {
 	wg := sync.WaitGroup{}
 	cfg := config.Init()
-	// ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(1)
-	// repo := repositories.NewMovieRepository(cfg.AccessToken)
-	// err := cron.DownloadWithID(ctx, "", "", "443664", cfg, repo)
-	err := utils.UploadFolderToMinio(
-		"test/fd29222081571ec9eb1df30ec3956cf7/video/480p", "fd29222081571ec9eb1df30ec3956cf7/video/480p",
-		cfg.MINIO_BUCKET, cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY,
-		cfg.MINIO_SECRET_KEY, cfg.MINIO_SECURE, 10,
-	)
+	repo := repositories.NewMovieRepository(cfg.AccessToken)
+	err := cron.DownloadWithID(ctx, "", "", "180419", cfg, repo)
+	// err := utils.UploadFolderToMinio(
+	// 	"test/fd29222081571ec9eb1df30ec3956cf7/video/480p", "fd29222081571ec9eb1df30ec3956cf7/video/480p",
+	// 	cfg.MINIO_BUCKET, cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY,
+	// 	cfg.MINIO_SECRET_KEY, cfg.MINIO_SECURE, 10,
+	// )
 
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +39,7 @@ func main() {
 	<-quit
 
 	fmt.Println("Received shutdown signal...")
-	// cancel() // Cancel the context to signal goroutines to stop
+	cancel() // Cancel the context to signal goroutines to stop
 	wg.Wait()
 	log.Println("Shutting down server...")
 

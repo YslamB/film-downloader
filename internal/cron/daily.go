@@ -9,6 +9,7 @@ import (
 	"film-downloader/internal/requests"
 	"film-downloader/internal/utils"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -45,12 +46,12 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 	var err error
 
 	if episodeID == "" && seasonID == "" && filmID != "" {
-		movieSource, err := DownloadMovieSourceWithID(ctx, filmID, cfg, repo)
+		movieSources, err := DownloadMovieSourceWithID(ctx, filmID, cfg, repo)
 
 		if err != nil {
 			return err
 		}
-		movies = append(movies, movieSource)
+		movies = append(movies, movieSources...)
 	}
 
 	if seasonID != "" {
@@ -73,10 +74,29 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		}
 
 		err = utils.UploadFolderToMinio(
-			movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
+			"temp/"+movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
 			cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY, cfg.MINIO_SECRET_KEY,
 			cfg.MINIO_SECURE, cfg.MINIO_WORKERS,
 		)
+
+		if err != nil {
+			return err
+		}
+
+		fileID, err := repo.GetFileID(ctx, movies[i].Name)
+
+		if err != nil {
+			return err
+		}
+
+		err = repo.CreateMovieFile(ctx, fileID, movies[i].ID)
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("🔍 File ID:", fileID)
+		err = os.RemoveAll("temp/" + movies[i].Name)
 
 		if err != nil {
 			return err

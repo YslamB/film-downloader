@@ -23,7 +23,7 @@ func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg *config.Config,
 	cmd := exec.Command(
 		"ffmpeg",
 		"-headers", "authorization:"+cfg.AccessToken,
-		"-i", baseM3U8URL.Source,
+		"-i", baseM3U8URL.Sources[0].MasterFile,
 		"-map", "0:v", "-map", "0:a",
 		"-c", "copy",
 		"-bsf:a", "aac_adtstoasc",

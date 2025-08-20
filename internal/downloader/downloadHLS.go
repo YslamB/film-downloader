@@ -17,80 +17,85 @@ import (
 )
 
 func DownloadHLS(movie models.Movie, cfg *config.Config) error {
-	os.MkdirAll(movie.Name, 0755)
+	os.MkdirAll("temp/"+movie.Name, 0755)
+	for _, source := range movie.Sources {
+		masterBody := downloadFile(source.MasterFile, cfg.AccessToken)
+		defer masterBody.Close()
 
-	masterBody := downloadFile(movie.Source, cfg.AccessToken)
-	defer masterBody.Close()
+		masterContent, err := io.ReadAll(masterBody)
 
-	masterContent, err := io.ReadAll(masterBody)
-
-	if err != nil {
-		return fmt.Errorf("failed to read master playlist: %v", err)
-	}
-
-	baseURL, err := url.Parse(movie.Source)
-
-	if err != nil {
-		return fmt.Errorf("failed to parse base URL: %v", err)
-	}
-
-	var videoM3U8 string
-	audioM3U8s := make(map[string]string)
-	subtitleM3U8s := make(map[string]string)
-
-	scanner := bufio.NewScanner(bytes.NewReader(masterContent))
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "#EXT-X-STREAM-INF") {
-			scanner.Scan()
-			videoM3U8 = resolveURL(baseURL, scanner.Text())
+		if err != nil {
+			return fmt.Errorf("failed to read master playlist: %v", err)
 		}
 
-		if strings.HasPrefix(line, "#EXT-X-MEDIA") && strings.Contains(line, "TYPE=AUDIO") {
-			lang := extractAttr(line, "LANGUAGE")
-			uri := extractAttr(line, "URI")
+		baseURL, err := url.Parse(source.MasterFile)
 
-			if uri != "" && lang != "" {
-				audioM3U8s[lang] = resolveURL(baseURL, uri)
+		if err != nil {
+			return fmt.Errorf("failed to parse base URL: %v", err)
+		}
+
+		var videoM3U8 string
+		audioM3U8s := make(map[string]string)
+		subtitleM3U8s := make(map[string]string)
+
+		scanner := bufio.NewScanner(bytes.NewReader(masterContent))
+
+		for scanner.Scan() {
+			line := scanner.Text()
+
+			if strings.HasPrefix(line, "#EXT-X-STREAM-INF") {
+				scanner.Scan()
+				videoM3U8 = resolveURL(baseURL, scanner.Text())
+			}
+
+			if strings.HasPrefix(line, "#EXT-X-MEDIA") && strings.Contains(line, "TYPE=AUDIO") {
+				lang := extractAttr(line, "LANGUAGE")
+				uri := extractAttr(line, "URI")
+
+				if uri != "" && lang != "" {
+					audioM3U8s[lang] = resolveURL(baseURL, uri)
+				}
+			}
+
+			if strings.HasPrefix(line, "#EXT-X-MEDIA") && strings.Contains(line, "TYPE=SUBTITLES") {
+				lang := extractAttr(line, "LANGUAGE")
+				uri := extractAttr(line, "URI")
+				if uri != "" && lang != "" {
+					subtitleM3U8s[lang] = resolveURL(baseURL, uri)
+				}
 			}
 		}
 
-		if strings.HasPrefix(line, "#EXT-X-MEDIA") && strings.Contains(line, "TYPE=SUBTITLES") {
-			lang := extractAttr(line, "LANGUAGE")
-			uri := extractAttr(line, "URI")
-			if uri != "" && lang != "" {
-				subtitleM3U8s[lang] = resolveURL(baseURL, uri)
-			}
+		if videoM3U8 == "" {
+			return fmt.Errorf("no video playlist found")
 		}
+
+		downloadMediaPlaylist(movie.Name, videoM3U8, source, cfg.AccessToken)
+
+		if source.Main {
+			for lang, audioURL := range audioM3U8s {
+				downloadMediaPlaylistWithLang(movie.Name, audioURL, "audio", lang, cfg.AccessToken)
+			}
+
+			for lang, subtitleURL := range subtitleM3U8s {
+				downloadMediaPlaylistWithLang(movie.Name, subtitleURL, "sub", lang, cfg.AccessToken)
+			}
+
+			generateLocalMasterPlaylist(movie, audioM3U8s, subtitleM3U8s)
+		}
+
 	}
-
-	if videoM3U8 == "" {
-		return fmt.Errorf("no video playlist found")
-	}
-
-	downloadMediaPlaylist(movie.Name, videoM3U8, "video/1080p", cfg.AccessToken)
-
-	for lang, audioURL := range audioM3U8s {
-		downloadMediaPlaylistWithLang(movie.Name, audioURL, "audio", lang, cfg.AccessToken)
-	}
-
-	for lang, subtitleURL := range subtitleM3U8s {
-		downloadMediaPlaylistWithLang(movie.Name, subtitleURL, "sub", lang, cfg.AccessToken)
-	}
-
-	generateLocalMasterPlaylist(movie.Name, audioM3U8s, subtitleM3U8s)
 	return nil
 }
 
-func downloadMediaPlaylist(name, playlistURL, folder, accessToken string) []string {
+func downloadMediaPlaylist(name, playlistURL string, source models.Source, accessToken string) []string {
+	folder := fmt.Sprintf("video/%s", source.Quality)
 	u, _ := url.Parse(playlistURL)
 	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()
-	dir := filepath.Join(name, folder)
+	dir := filepath.Join("temp/"+name, folder)
 	os.MkdirAll(dir, 0755)
-	localM3U8 := filepath.Join(dir, "1080p_playlist.m3u8")
+	localM3U8 := filepath.Join(dir, fmt.Sprintf("%s_playlist.m3u8", source.Quality))
 	out, err := os.Create(localM3U8)
 
 	if err != nil {
@@ -147,7 +152,7 @@ func downloadMediaPlaylistWithLang(name, playlistURL, folder, lang, accessToken 
 	resp := downloadFile(playlistURL, accessToken)
 	defer resp.Close()
 
-	dir := filepath.Join(name, folder)
+	dir := filepath.Join("temp/"+name, folder)
 	os.MkdirAll(dir, 0755)
 
 	localM3U8 := filepath.Join(dir, fmt.Sprintf("%s_playlist.m3u8", lang))
@@ -271,9 +276,10 @@ func extractAttr(line, key string) string {
 	return ""
 }
 
-func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map[string]string) {
-	masterPath := filepath.Join(movieName, "master.m3u8")
+func generateLocalMasterPlaylist(movie models.Movie, audioM3U8s, subtitleM3U8s map[string]string) {
+	masterPath := filepath.Join("temp/"+movie.Name, "master.m3u8")
 	out, err := os.Create(masterPath)
+
 	if err != nil {
 		log.Printf("Failed to create local master playlist: %v", err)
 		return
@@ -291,31 +297,34 @@ func generateLocalMasterPlaylist(movieName string, audioM3U8s, subtitleM3U8s map
 				defaultStr = "YES"
 				isFirst = false
 			}
-			out.WriteString(fmt.Sprintf("#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"audio\",LANGUAGE=\"%s\",NAME=\"%s\",DEFAULT=%s,AUTOSELECT=YES,URI=\"audio/%s_playlist.m3u8\"\n",
-				lang, lang, defaultStr, lang))
+			fmt.Fprintf(out, "#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"audio\",LANGUAGE=\"%s\",NAME=\"%s\",DEFAULT=%s,AUTOSELECT=YES,URI=\"audio/%s_playlist.m3u8\"\n",
+				lang, lang, defaultStr, lang)
 		}
 		out.WriteString("\n")
 	}
 
 	if len(subtitleM3U8s) > 0 {
 		for lang := range subtitleM3U8s {
-			out.WriteString(fmt.Sprintf("#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",LANGUAGE=\"%s\",NAME=\"%s\",DEFAULT=NO,URI=\"sub/%s_playlist.m3u8\"\n",
-				lang, lang, lang))
+			fmt.Fprintf(out, "#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"subs\",LANGUAGE=\"%s\",NAME=\"%s\",DEFAULT=NO,URI=\"sub/%s_playlist.m3u8\"\n",
+				lang, lang, lang)
 		}
 		out.WriteString("\n")
 	}
 
 	audioGroup := ""
 	subsGroup := ""
+
 	if len(audioM3U8s) > 0 {
 		audioGroup = ",AUDIO=\"audio\""
 	}
+
 	if len(subtitleM3U8s) > 0 {
 		subsGroup = ",SUBTITLES=\"subs\""
 	}
+	for _, source := range movie.Sources {
+		fmt.Fprintf(out, "#EXT-X-STREAM-INF:BANDWIDTH=%s,RESOLUTION=%s,CODECS=\"%s\"%s%s\n", models.Bandwidths[source.Quality], models.Resolutions[source.Quality], models.Codecs[source.Quality], audioGroup, subsGroup)
+		fmt.Fprintf(out, "video/%s/%s_playlist.m3u8\n", source.Quality, source.Quality)
 
-	out.WriteString(fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=5128000,RESOLUTION=1920x1080,CODECS=\"avc1.640028,mp4a.40.2\"%s%s\n", audioGroup, subsGroup))
-	out.WriteString("video/1080p/1080p_playlist.m3u8\n")
-
-	fmt.Printf("Generated local master playlist: %s\n", masterPath)
+		fmt.Printf("Generated local master playlist: %s\n", masterPath)
+	}
 }

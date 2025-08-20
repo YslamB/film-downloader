@@ -66,24 +66,40 @@ func GetEpisodesSourceWithSeasonID(seasonID, episodeID string, cfg *config.Confi
 	for _, ep := range result.Episodes {
 		idStr := fmt.Sprintf("%d", ep.ID)
 		for _, source := range ep.Sources {
-			if source.Quality == "1080p" {
-				uuid, err := utils.GenerateUUID()
+			main := false
 
-				if err != nil {
-					return movies, fmt.Errorf("failed to generate UUID: %w", err)
-				}
-				if episodeID != "" && idStr == episodeID {
-					movies = append(movies, models.Movie{Source: source.DownloadURL, Name: uuid})
-					return movies, nil
-				}
-				if episodeID == "" {
-					movies = append(movies, models.Movie{Source: source.DownloadURL, Name: uuid})
-				}
+			if source.Quality == "1080p" {
+				main = true
 			}
+
+			uuid, err := utils.GenerateUUID()
+
+			if err != nil {
+				return movies, fmt.Errorf("failed to generate UUID: %w", err)
+			}
+
+			movie := models.Movie{Name: uuid}
+
+			if episodeID != "" && idStr == episodeID {
+				movie.Sources = append(movie.Sources, models.Source{
+					MasterFile: source.DownloadURL,
+					Quality:    source.Quality,
+					Main:       main,
+				})
+			}
+
+			if episodeID == "" {
+				movie.Sources = append(movie.Sources, models.Source{
+					MasterFile: source.DownloadURL,
+					Quality:    source.Quality,
+					Main:       main,
+				})
+			}
+
+			movies = append(movies, movie)
 		}
 	}
 
-	// If episodeID was specified but not found
 	if episodeID != "" && len(movies) == 0 {
 		return movies, fmt.Errorf("❌ episode %s not found or has no 1080p source", episodeID)
 	}

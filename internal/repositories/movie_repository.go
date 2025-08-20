@@ -20,16 +20,18 @@ type MovieRepository struct {
 }
 
 const (
-	getMovieURL      = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
-	createMovieURL   = "http://95.85.126.217:5050/api/v1/admin/movies"
-	getCategoryIDURL = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
-	getGenreIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
-	getCountryIDURL  = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
-	getActorIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons"
-	getStudioIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/studios"
-	getLanguageIDURL = "http://95.85.126.217:5050/api/v1/admin/catalogs/languages"
-	sendImageURL     = "http://95.85.126.217:5050/api/v1/admin/movies/images"
-	updateActorURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons/%d"
+	getMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
+	createMovieURL     = "http://95.85.126.217:5050/api/v1/admin/movies"
+	getCategoryIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
+	getGenreIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
+	getCountryIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
+	getActorIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons"
+	getStudioIDURL     = "http://95.85.126.217:5050/api/v1/admin/catalogs/studios"
+	getLanguageIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/languages"
+	sendImageURL       = "http://95.85.126.217:5050/api/v1/admin/movies/images"
+	updateActorURL     = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons/%d"
+	createMovieFileURL = "http://95.85.126.217:5050/api/v1/admin/movies/file"
+	assignMovieFileURL = "http://95.85.126.217:5050/api/v1/admin/movies/files"
 )
 
 func NewMovieRepository(accessToken string) *MovieRepository {
@@ -594,14 +596,14 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	if movie.Duration != "" {
 		duration, _ = strconv.Atoi(movie.Duration)
 	} else {
-		duration = 90 // Default 90 minutes
+		duration = 90
 	}
 
 	ageRestriction := 0
 	if movie.Age != "" {
 		ageRestriction, _ = strconv.Atoi(movie.Age)
 	} else {
-		ageRestriction = 16 // Default 16
+		ageRestriction = 16
 	}
 
 	movieType := "movie"
@@ -678,4 +680,94 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 
 	fmt.Println("✅ Movie created successfully with ID:", response.ID)
 	return response.ID, nil
+}
+
+func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, error) {
+	fmt.Println("🎬 Creating movie file for:", name)
+
+	body := map[string]any{
+		"path": "movies/" + name + "/master.m3u8",
+		"type": "application/x-mpegURL",
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createMovieFileURL, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
+	}
+
+	var response models.GetIDResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return 0, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	fmt.Println("✅ Movie file created successfully with ID:", response.ID)
+	return response.ID, nil
+}
+
+func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID int) error {
+	fmt.Println("🔗 Assigning file ID", fileID, "to movie ID", movieID)
+
+	body := map[string]any{
+		"file_id":  fileID,
+		"movie_id": movieID,
+	}
+
+	bodyBytes, err := json.Marshal(body)
+
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, assignMovieFileURL, bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
+	}
+
+	fmt.Println("✅ Successfully assigned file to movie")
+	return nil
 }

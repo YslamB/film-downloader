@@ -1,8 +1,16 @@
 package models
 
+type Source struct {
+	MasterFile string `json:"master_file"`
+	Quality    string `json:"quality"`
+	Type       string `json:"type"`
+	Main       bool   `json:"main"`
+}
+
 type Movie struct {
-	Name   string
-	Source string
+	ID      int
+	Name    string
+	Sources []Source
 }
 
 // MovieResponse represents the API response structure

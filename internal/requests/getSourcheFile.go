@@ -12,13 +12,14 @@ import (
 	"time"
 )
 
-func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config) (models.Movie, error) {
+func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config, movieID int) ([]models.Movie, error) {
 	var movie models.Movie
+	var movies []models.Movie
 	apiURL := fmt.Sprintf("https://film.beletapis.com/api/v2/files/%s?type=1", filmID)
 	req, err := http.NewRequest(http.MethodGet, apiURL, nil)
 
 	if err != nil {
-		return movie, fmt.Errorf("failed to create request: %w", err)
+		return []models.Movie{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", cfg.AccessToken)
 	req.Header.Set("Accept", "application/json, text/plain, */*")
@@ -39,42 +40,53 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config) (m
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return movie, fmt.Errorf("request failed: %w", err)
+		return []models.Movie{}, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return movie, fmt.Errorf("bad response: %s", resp.Status)
+		return []models.Movie{}, fmt.Errorf("bad response: %s", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return movie, fmt.Errorf("failed to read response: %w", err)
+		return []models.Movie{}, fmt.Errorf("failed to read response: %w", err)
 	}
 
 	var result struct {
 		Sources []struct {
 			Filename string `json:"filename"`
 			Quality  string `json:"quality"`
+			Type     string `json:"type"`
 		} `json:"sources"`
 	}
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return movie, fmt.Errorf("failed to parse JSON: %w", err)
+		return []models.Movie{}, fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
 	for _, source := range result.Sources {
-		if source.Quality == "1080p" {
-			movie.Source = source.Filename
-			movie.Name, err = utils.GenerateUUID()
+		main := false
 
-			if err != nil {
-				return movie, fmt.Errorf("failed to generate UUID: %w", err)
-			}
-			return movie, nil
+		if source.Quality == "1080p" {
+			main = true
+		}
+
+		movie.Sources = append(movie.Sources, models.Source{
+			MasterFile: source.Filename,
+			Quality:    source.Quality,
+			Type:       source.Type,
+			Main:       main,
+		})
+		movie.Name, err = utils.GenerateUUID()
+
+		if err != nil {
+			return []models.Movie{}, fmt.Errorf("failed to generate UUID: %w", err)
 		}
 	}
+	movie.ID = movieID
+	movies = append(movies, movie)
 
-	return movie, fmt.Errorf("1080p source not found")
+	return movies, nil
 }
