@@ -13,7 +13,6 @@ type Movie struct {
 	Sources []Source
 }
 
-// MovieResponse represents the API response structure
 type MovieResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`

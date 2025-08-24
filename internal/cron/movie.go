@@ -6,22 +6,24 @@ import (
 	"film-downloader/internal/models"
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
+	"film-downloader/internal/utils"
 	"fmt"
 	"strconv"
-	"time"
 )
 
 func DownloadMovieSourceWithID(ctx context.Context, filmID string, cfg *config.Config, repo *repositories.MovieRepository) ([]models.Movie, error) {
 	var movieSources []models.Movie
-	movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
 
+	delayManager := utils.NewDelayManager()
+	delayManager.SetAPIDelay()
+
+	movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
 	if err != nil {
 		return movieSources, err
 	}
 
 	exists, err := repo.CheckMovieExists(ctx, strconv.Itoa(movieRes.Film.ID))
-	time.Sleep(1 * time.Second)
-
+	delayManager.Execute("api")
 	if err != nil {
 		return movieSources, err
 	}
@@ -32,24 +34,21 @@ func DownloadMovieSourceWithID(ctx context.Context, filmID string, cfg *config.C
 
 	movieRes.Film.CategoryID, err = repo.GetCategoryID(ctx, movieRes.Film.CategoryID)
 	fmt.Println("🔍 Category ID:", movieRes.Film.CategoryID)
-	time.Sleep(1 * time.Second)
-
+	delayManager.Execute("api")
 	if err != nil {
 		return movieSources, err
 	}
 
 	genreIDs, err := repo.GetGenreIDs(ctx, movieRes.Film.Genres)
 	fmt.Println("🔍 Genre IDs:", genreIDs)
-	time.Sleep(1 * time.Second)
-
+	delayManager.Execute("api")
 	if err != nil {
 		return movieSources, err
 	}
 
 	countryIDs, err := repo.GetCountryIDs(ctx, movieRes.Film.Countries)
 	fmt.Println("🔍 Country IDs:", countryIDs)
-	time.Sleep(1 * time.Second)
-
+	delayManager.Execute("api")
 	if err != nil {
 		return movieSources, err
 	}
@@ -59,74 +58,72 @@ func DownloadMovieSourceWithID(ctx context.Context, filmID string, cfg *config.C
 		return movieSources, err
 	}
 	fmt.Println("🔍 Actor IDs:", actorIDs)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	directorIDs, err := repo.GetActorIDs(ctx, movieRes.Film.Directors)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Director IDs:", directorIDs)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	studioIDs, err := repo.GetStudioIDs(ctx, movieRes.Film.Studios)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Studio IDs:", studioIDs)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	verticalImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.Vertical.Default)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Vertical Image ID:", verticalImageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	verticalWithoutNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.VerticalWithoutName.Default)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Vertical Without Name Image ID:", verticalWithoutNameImageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	horizontalWithNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.HorizontalWithName.Default)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Horizontal With Name Image ID:", horizontalWithNameImageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	horizontalWithoutNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.HorizontalWithoutName.Default)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Horizontal Without Name Image ID:", horizontalWithoutNameImageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	nameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.Name)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Name Image ID:", nameImageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	languageID, err := repo.GetLanguageID(ctx, movieRes.Film.Language)
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Language ID:", languageID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	movieID, err := repo.CreateMovie(ctx, movieRes.Film, genreIDs, countryIDs, actorIDs, directorIDs, studioIDs, languageID, verticalImageID, verticalWithoutNameImageID, horizontalWithNameImageID, horizontalWithoutNameImageID, nameImageID)
-
 	if err != nil {
 		return movieSources, err
 	}
 	fmt.Println("🔍 Movie ID:", movieID)
-	time.Sleep(1 * time.Second)
+	delayManager.Execute("api")
 
 	movieSources, err = requests.GetFilmSourceURL(ctx, filmID, cfg, movieID)
-
 	if err != nil {
 		return movieSources, err
 	}

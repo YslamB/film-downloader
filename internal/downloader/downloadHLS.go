@@ -88,74 +88,53 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 	return nil
 }
 
+type MediaPlaylistConfig struct {
+	Name        string
+	PlaylistURL string
+	AccessToken string
+	Folder      string
+	Quality     string
+	Language    string
+}
+
 func downloadMediaPlaylist(name, playlistURL string, source models.Source, accessToken string) []string {
-	folder := fmt.Sprintf("video/%s", source.Quality)
-	u, _ := url.Parse(playlistURL)
-	resp := downloadFile(playlistURL, accessToken)
-	defer resp.Close()
-	dir := filepath.Join("temp/"+name, folder)
-	os.MkdirAll(dir, 0755)
-	localM3U8 := filepath.Join(dir, fmt.Sprintf("%s_playlist.m3u8", source.Quality))
-	out, err := os.Create(localM3U8)
-
-	if err != nil {
-		log.Fatal(err)
+	config := MediaPlaylistConfig{
+		Name:        name,
+		PlaylistURL: playlistURL,
+		AccessToken: accessToken,
+		Folder:      fmt.Sprintf("video/%s", source.Quality),
+		Quality:     source.Quality,
 	}
-
-	defer out.Close()
-	scanner := bufio.NewScanner(resp)
-	segmentIndex := 0
-	var downloaded []string
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, "#") {
-			out.WriteString(line + "\n")
-			continue
-		}
-
-		segmentIndex++
-		segmentURL := resolveURL(u, line)
-		var fileExt string
-
-		if strings.HasPrefix(folder, "subtitle_") {
-
-			if strings.Contains(line, ".") {
-				parts := strings.Split(line, ".")
-				fileExt = "." + parts[len(parts)-1]
-			} else {
-				fileExt = ".vtt"
-			}
-		} else {
-			fileExt = ".ts"
-		}
-
-		localSegment := fmt.Sprintf("segment_%03d%s", segmentIndex, fileExt)
-		localPath := filepath.Join(dir, localSegment)
-		fmt.Printf("Downloading %s...\n", localPath)
-		err := saveFile(segmentURL, accessToken, localPath)
-
-		if err != nil {
-			log.Fatalf("Failed to download segment: %v", err)
-		}
-
-		out.WriteString(localSegment + "\n")
-		downloaded = append(downloaded, localSegment)
-	}
-
-	return downloaded
+	return downloadMediaPlaylistGeneric(config)
 }
 
 func downloadMediaPlaylistWithLang(name, playlistURL, folder, lang, accessToken string) []string {
-	u, _ := url.Parse(playlistURL)
-	resp := downloadFile(playlistURL, accessToken)
+	config := MediaPlaylistConfig{
+		Name:        name,
+		PlaylistURL: playlistURL,
+		AccessToken: accessToken,
+		Folder:      folder,
+		Language:    lang,
+	}
+	return downloadMediaPlaylistGeneric(config)
+}
+
+func downloadMediaPlaylistGeneric(config MediaPlaylistConfig) []string {
+	u, _ := url.Parse(config.PlaylistURL)
+	resp := downloadFile(config.PlaylistURL, config.AccessToken)
 	defer resp.Close()
 
-	dir := filepath.Join("temp/"+name, folder)
+	dir := filepath.Join("temp/"+config.Name, config.Folder)
 	os.MkdirAll(dir, 0755)
 
-	localM3U8 := filepath.Join(dir, fmt.Sprintf("%s_playlist.m3u8", lang))
+	var playlistName string
+	if config.Language != "" {
+		playlistName = fmt.Sprintf("%s_playlist.m3u8", config.Language)
+	} else {
+		playlistName = fmt.Sprintf("%s_playlist.m3u8", config.Quality)
+	}
+
+	localM3U8 := filepath.Join(dir, playlistName)
 	out, err := os.Create(localM3U8)
 	if err != nil {
 		log.Fatal(err)
@@ -178,7 +157,7 @@ func downloadMediaPlaylistWithLang(name, playlistURL, folder, lang, accessToken 
 		segmentURL := resolveURL(u, line)
 
 		var fileExt string
-		if strings.HasPrefix(folder, "sub") {
+		if strings.HasPrefix(config.Folder, "subtitle_") || strings.HasPrefix(config.Folder, "sub") {
 			if strings.Contains(line, ".") {
 				parts := strings.Split(line, ".")
 				fileExt = "." + parts[len(parts)-1]
@@ -189,10 +168,16 @@ func downloadMediaPlaylistWithLang(name, playlistURL, folder, lang, accessToken 
 			fileExt = ".ts"
 		}
 
-		localSegment := fmt.Sprintf("%s_segment_%03d%s", lang, segmentIndex, fileExt)
+		var localSegment string
+		if config.Language != "" {
+			localSegment = fmt.Sprintf("%s_segment_%03d%s", config.Language, segmentIndex, fileExt)
+		} else {
+			localSegment = fmt.Sprintf("segment_%03d%s", segmentIndex, fileExt)
+		}
+
 		localPath := filepath.Join(dir, localSegment)
 		fmt.Printf("Downloading %s...\n", localPath)
-		err := saveFile(segmentURL, accessToken, localPath)
+		err := saveFile(segmentURL, config.AccessToken, localPath)
 
 		if err != nil {
 			log.Fatalf("Failed to download segment: %v", err)

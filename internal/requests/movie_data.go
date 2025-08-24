@@ -1,16 +1,13 @@
 package requests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	"film-downloader/internal/config"
 	"film-downloader/internal/models"
+	"film-downloader/internal/utils"
 )
 
 func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (models.MovieResponse, error) {
@@ -18,41 +15,16 @@ func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (mode
 
 	url := fmt.Sprintf("https://film.beletapis.com/api/v2/movie/%s", movieID)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	apiConfig := utils.APIRequestConfig{
+		Method:      "GET",
+		URL:         url,
+		AccessToken: cfg.AccessToken,
+		Timeout:     30 * time.Second,
+	}
+
+	err := utils.MakeJSONRequest(ctx, apiConfig, &movieResponse)
 	if err != nil {
-		return movieResponse, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", cfg.AccessToken)
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Sec-Ch-Ua", `"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"`)
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return movieResponse, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return movieResponse, fmt.Errorf("API returned status code: %d", resp.StatusCode)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&movieResponse); err != nil {
-		return movieResponse, fmt.Errorf("failed to decode response: %w", err)
+		return movieResponse, utils.WrapErrorf(err, "failed to get movie data for ID %s", movieID)
 	}
 
 	return movieResponse, nil
@@ -61,43 +33,17 @@ func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (mode
 func GetSeasonsData(ctx context.Context, movieID string, cfg *config.Config) ([]models.Season, error) {
 	var movieResponse models.MovieResponse
 	url := fmt.Sprintf("https://film.beletapis.com/api/v2/movie/%s", movieID)
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 
+	apiConfig := utils.APIRequestConfig{
+		Method:      "GET",
+		URL:         url,
+		AccessToken: cfg.AccessToken,
+		Timeout:     10 * time.Second,
+	}
+
+	err := utils.MakeJSONRequest(ctx, apiConfig, &movieResponse)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", cfg.AccessToken)
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Sec-Ch-Ua", `"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"`)
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status code: %d", resp.StatusCode)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&movieResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+		return nil, utils.WrapErrorf(err, "failed to get seasons data for movie ID %s", movieID)
 	}
 
 	return movieResponse.Film.Seasons, nil
@@ -118,50 +64,20 @@ func GetSearchResults(ctx context.Context, page int, cfg *config.Config) (models
 		Order: "desc",
 	}
 
-	jsonData, err := json.Marshal(requestBody)
+	apiConfig := utils.APIRequestConfig{
+		Method:      "POST",
+		URL:         url,
+		Body:        requestBody,
+		AccessToken: cfg.AccessToken,
+		Timeout:     30 * time.Second,
+		Headers: map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+	}
+
+	err := utils.MakeJSONRequest(ctx, apiConfig, &searchResult)
 	if err != nil {
-		return searchResult, fmt.Errorf("failed to marshal request body: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return searchResult, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", cfg.AccessToken)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Sec-Ch-Ua", `"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"`)
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return searchResult, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		fmt.Printf("API Error - Status: %d, Body: %s\n", resp.StatusCode, string(body))
-		return searchResult, fmt.Errorf("API returned status code: %d", resp.StatusCode)
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
-		return searchResult, fmt.Errorf("failed to decode response: %w", err)
+		return searchResult, utils.WrapErrorf(err, "failed to get search results for page %d", page)
 	}
 
 	return searchResult, nil

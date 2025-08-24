@@ -4,7 +4,6 @@ type GetIDResponse struct {
 	ID int `json:"id"`
 }
 
-// SearchResult represents the structure of searchResult.json
 type SearchResult struct {
 	Films   []SearchFilm `json:"films"`
 	Message string       `json:"message"`

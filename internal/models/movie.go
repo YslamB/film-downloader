@@ -22,7 +22,6 @@ var (
 	}
 )
 
-// BasicMovie represents a simplified movie structure for internal use
 type BasicMovie struct {
 	ID          string
 	Title       string
