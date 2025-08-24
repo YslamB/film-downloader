@@ -103,19 +103,16 @@ func GetSeasonsData(ctx context.Context, movieID string, cfg *config.Config) ([]
 	return movieResponse.Film.Seasons, nil
 }
 
-// SearchRequest represents the request body for the search API
 type SearchRequest struct {
 	Page  int    `json:"page"`
 	Order string `json:"order"`
 }
 
-// GetSearchResults sends a POST request to the search API and returns the search results
 func GetSearchResults(ctx context.Context, page int, cfg *config.Config) (models.SearchResult, error) {
 	var searchResult models.SearchResult
 
 	url := "https://film-search.belet.me/api/v1/search"
 
-	// Create request body
 	requestBody := SearchRequest{
 		Page:  page,
 		Order: "desc",

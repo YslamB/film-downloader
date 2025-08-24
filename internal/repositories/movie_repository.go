@@ -615,7 +615,7 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	}
 
 	body := map[string]any{
-		"belet_id":                movie.ID,
+		"ext_id":                  movie.ID,
 		"title":                   movie.Name,
 		"description":             movie.Description,
 		"release_year":            movie.Year,

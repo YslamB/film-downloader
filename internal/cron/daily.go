@@ -3,7 +3,6 @@ package cron
 import (
 	"context"
 	"film-downloader/internal/config"
-	"film-downloader/internal/downloader"
 	"film-downloader/internal/models"
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
@@ -41,6 +40,7 @@ func CheckWithStatus() {
 }
 
 func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg *config.Config, repo *repositories.MovieRepository) error {
+	fmt.Println("asdfoiufjkio")
 	var movies []models.Movie
 	var err error
 
@@ -48,6 +48,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		movieSources, err := DownloadMovieSourceWithID(ctx, filmID, cfg, repo)
 
 		if err != nil {
+			fmt.Println("soidhfi")
 			return err
 		}
 		movies = append(movies, movieSources...)
@@ -57,20 +58,23 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		fmt.Println("🔍 Checking season with ID:", seasonID)
 		movies, err = requests.GetEpisodesSourceWithSeasonID(seasonID, episodeID, cfg)
 		time.Sleep(1 * time.Second)
+		fmt.Println("s89dhuinuj")
 
 		if err != nil {
+			fmt.Println("sd89fhuin")
 			return err
 		}
 	}
+	fmt.Println("so9d8fuhin")
 
 	fmt.Println("✅ Received Source files...", movies)
 
 	for i := range movies {
-		err := downloader.DownloadHLS(movies[i], cfg)
+		// err := downloader.DownloadHLS(movies[i], cfg)
 
-		if err != nil {
-			return err
-		}
+		// if err != nil {
+		// 	return err
+		// }
 
 		// err = utils.UploadFolderToMinio(
 		// 	"temp/"+movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
@@ -82,15 +86,18 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		// 	return err
 		// }
 
+		fmt.Println("soidfhu8i9")
 		fileID, err := repo.GetFileID(ctx, movies[i].Name)
 
 		if err != nil {
+			fmt.Println("09s8duhinj")
 			return err
 		}
 
 		err = repo.CreateMovieFile(ctx, fileID, movies[i].ID)
 
 		if err != nil {
+			fmt.Println("asdfoiu9u83ybhwsfjkio")
 			return err
 		}
 
@@ -98,6 +105,7 @@ func DownloadWithID(ctx context.Context, episodeID, seasonID, filmID string, cfg
 		err = os.RemoveAll("temp/" + movies[i].Name)
 
 		if err != nil {
+			fmt.Println("893uhienjf")
 			return err
 		}
 	}
@@ -112,44 +120,37 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 		return fmt.Errorf("failed to get search results from API: %w", err)
 	}
 
-	fmt.Printf("📋 Found %d films in search results\n", len(searchResult.Films))
+	for i := range searchResult.Films {
 
-	for i, film := range searchResult.Films {
+		filmID := fmt.Sprintf("%d", searchResult.Films[i].ID)
 
-		fmt.Printf("🎬 Processing film %d/%d: (ID: %d)\n", i+1, len(searchResult.Films), film.ID)
-		filmID := fmt.Sprintf("%d", film.ID)
-
-		if film.TypeID == 1 {
+		if searchResult.Films[i].TypeID == 1 {
 			err := DownloadWithID(ctx, "", "", filmID, cfg, repo)
 
 			if err != nil {
-				fmt.Printf("❌ Failed to download film %d (ID: %d): %v\n", film.ID, film.ID, err)
-
+				fmt.Println("❌ Failed to download film", filmID, err)
 				continue
 			}
 		} else {
-			seasons, err := requests.GetSeasonsData(ctx, filmID, cfg)
+			continue
+			// seasons, err := requests.GetSeasonsData(ctx, filmID, cfg)
 
-			if err != nil {
-				fmt.Printf("❌ Failed to get seasons data for film %d (ID: %d): %v\n", film.ID, film.ID, err)
+			// if err != nil {
+			// 	fmt.Println("❌ Failed to get seasons data for film", filmID, err)
+			// 	continue
+			// }
 
-				continue
-			}
+			// for i := range seasons {
+			// 	err := DownloadWithID(ctx, "", fmt.Sprintf("%d", seasons[i].ID), filmID, cfg, repo)
 
-			for _, season := range seasons {
-				fmt.Printf("🎬 DownloadWithID season %d/%d: (ID: %d)\n", i+1, len(seasons), season.ID)
-				// err := DownloadWithID(ctx, "", fmt.Sprintf("%d", season.ID), filmID, cfg, repo)
-
-				// if err != nil {
-				// 	fmt.Printf("❌ Failed to download film %d (ID: %d): %v\n", film.ID, film.ID, err)
-
-				// 	continue
-				// }
-			}
+			// 	if err != nil {
+			// 		fmt.Println("❌ Failed to download season", seasons[i].ID, err)
+			// 		continue
+			// 	}
+			// }
 
 		}
 
-		fmt.Printf("✅ Successfully processed film: %d\n", film.ID)
 	}
 
 	return nil
