@@ -25,11 +25,12 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config, mo
 	apiConfig := utils.APIRequestConfig{
 		Method:      "GET",
 		URL:         apiURL,
-		AccessToken: cfg.AccessToken,
+		AccessToken: cfg.GetAccessToken(),
 		Timeout:     5 * time.Second,
 	}
 
 	err := utils.MakeJSONRequest(ctx, apiConfig, &result)
+
 	if err != nil {
 		return []models.Movie{}, utils.WrapErrorf(err, "failed to get film source URL for film ID %s", filmID)
 	}
@@ -46,6 +47,7 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config, mo
 	}
 
 	movie.Name, err = utils.GenerateUUID()
+
 	if err != nil {
 		return []models.Movie{}, utils.WrapError(err, "failed to generate UUID")
 	}

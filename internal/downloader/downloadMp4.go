@@ -8,11 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg *config.Config, db *pgxpool.Pool) error {
+func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg *config.Config) error {
 	err := os.MkdirAll(outputDir, 0777)
 
 	if err != nil {
@@ -21,7 +19,7 @@ func DownloadMp4(baseM3U8URL models.Movie, outputDir string, cfg *config.Config,
 
 	cmd := exec.Command(
 		"ffmpeg",
-		"-headers", "authorization:"+cfg.AccessToken,
+		"-headers", "authorization:"+cfg.GetAccessToken(),
 		"-i", baseM3U8URL.Sources[0].MasterFile,
 		"-map", "0:v", "-map", "0:a",
 		"-c", "copy",

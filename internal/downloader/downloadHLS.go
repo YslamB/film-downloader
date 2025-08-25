@@ -19,7 +19,7 @@ import (
 func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 	os.MkdirAll("temp/"+movie.Name, 0755)
 	for _, source := range movie.Sources {
-		masterBody := downloadFile(source.MasterFile, cfg.AccessToken)
+		masterBody := downloadFile(source.MasterFile, cfg.GetAccessToken())
 		defer masterBody.Close()
 
 		masterContent, err := io.ReadAll(masterBody)
@@ -70,15 +70,15 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 			return fmt.Errorf("no video playlist found")
 		}
 
-		downloadMediaPlaylist(movie.Name, videoM3U8, source, cfg.AccessToken)
+		downloadMediaPlaylist(movie.Name, videoM3U8, source, cfg.GetAccessToken())
 
 		if source.Main {
 			for lang, audioURL := range audioM3U8s {
-				downloadMediaPlaylistWithLang(movie.Name, audioURL, "audio", lang, cfg.AccessToken)
+				downloadMediaPlaylistWithLang(movie.Name, audioURL, "audio", lang, cfg.GetAccessToken())
 			}
 
 			for lang, subtitleURL := range subtitleM3U8s {
-				downloadMediaPlaylistWithLang(movie.Name, subtitleURL, "sub", lang, cfg.AccessToken)
+				downloadMediaPlaylistWithLang(movie.Name, subtitleURL, "sub", lang, cfg.GetAccessToken())
 			}
 
 			generateLocalMasterPlaylist(movie, audioM3U8s, subtitleM3U8s)

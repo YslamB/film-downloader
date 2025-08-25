@@ -16,7 +16,7 @@ func main() {
 	cfg := config.Init()
 	ctx, cancel := context.WithCancel(context.Background())
 
-	repo := repositories.NewMovieRepository(cfg.AccessToken)
+	repo := repositories.NewMovieRepository(cfg)
 	// err := cron.DownloadWithID(ctx, "", "178440", "178438", cfg, repo)
 	err := cron.GetLastMovies(ctx, cfg, repo)
 	// err := utils.UploadFolderToMinio(

@@ -18,7 +18,7 @@ func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (mode
 	apiConfig := utils.APIRequestConfig{
 		Method:      "GET",
 		URL:         url,
-		AccessToken: cfg.AccessToken,
+		AccessToken: cfg.GetAccessToken(),
 		Timeout:     30 * time.Second,
 	}
 
@@ -37,7 +37,7 @@ func GetSeasonsData(ctx context.Context, movieID string, cfg *config.Config) ([]
 	apiConfig := utils.APIRequestConfig{
 		Method:      "GET",
 		URL:         url,
-		AccessToken: cfg.AccessToken,
+		AccessToken: cfg.GetAccessToken(),
 		Timeout:     10 * time.Second,
 	}
 
@@ -68,7 +68,7 @@ func GetSearchResults(ctx context.Context, page int, cfg *config.Config) (models
 		Method:      "POST",
 		URL:         url,
 		Body:        requestBody,
-		AccessToken: cfg.AccessToken,
+		AccessToken: cfg.GetAccessToken(),
 		Timeout:     30 * time.Second,
 		Headers: map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",

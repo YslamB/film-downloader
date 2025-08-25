@@ -18,7 +18,7 @@ func GetEpisodesSourceWithSeasonID(seasonID, episodeID string, cfg *config.Confi
 	if err != nil {
 		return movies, fmt.Errorf("❌ failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", cfg.AccessToken)
+	req.Header.Set("Authorization", cfg.GetAccessToken())
 	req.Header.Set("Accept", "application/json, text/plain, */*")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")

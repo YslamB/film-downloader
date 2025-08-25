@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"film-downloader/internal/config"
 	"film-downloader/internal/models"
 	"fmt"
 	"io"
@@ -18,10 +19,11 @@ import (
 )
 
 type MovieRepository struct {
-	accessToken string
+	cfg *config.Config
 }
 
 const (
+	refreshTokenURL    = "https://api.belet.tm/api/v1/auth/refresh"
 	getMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
 	createMovieURL     = "http://95.85.126.217:5050/api/v1/admin/movies"
 	getCategoryIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
@@ -36,10 +38,53 @@ const (
 	assignMovieFileURL = "http://95.85.126.217:5050/api/v1/admin/movies/files"
 )
 
-func NewMovieRepository(accessToken string) *MovieRepository {
+func NewMovieRepository(cfg *config.Config) *MovieRepository {
 	return &MovieRepository{
-		accessToken: accessToken,
+		cfg: cfg,
 	}
+}
+
+func (r *MovieRepository) RefreshToken(ctx context.Context) error {
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, refreshTokenURL, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Cookie", r.cfg.Cookie)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad response: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var response models.RefreshTokenResponse
+
+	if err := json.Unmarshal(body, &response); err != nil {
+		return fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	r.cfg.SetAccessToken(response.AccessToken)
+
+	return nil
 }
 
 func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) (bool, error) {
@@ -89,7 +134,7 @@ func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (in
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 
 	client := &http.Client{
 		Timeout: time.Second * 10,
@@ -140,7 +185,7 @@ func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]i
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
 
-		req.Header.Set("Authorization", r.accessToken)
+		req.Header.Set("Authorization", r.cfg.GetAccessToken())
 
 		client := &http.Client{
 			Timeout: time.Second * 10,
@@ -193,7 +238,7 @@ func (r *MovieRepository) GetCountryIDs(ctx context.Context, countries []models.
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
 
-		req.Header.Set("Authorization", r.accessToken)
+		req.Header.Set("Authorization", r.cfg.GetAccessToken())
 
 		client := &http.Client{
 			Timeout: time.Second * 10,
@@ -288,7 +333,7 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
 
-		req.Header.Set("Authorization", r.accessToken)
+		req.Header.Set("Authorization", r.cfg.GetAccessToken())
 
 		client := &http.Client{
 			Timeout: time.Second * 10,
@@ -358,7 +403,7 @@ func (r *MovieRepository) UpdateActorImage(ctx context.Context, actorID int, act
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -564,7 +609,7 @@ func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (i
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -595,6 +640,7 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	fmt.Println("🎬 Creating movie:", movie.Name)
 
 	duration := 0
+
 	if movie.Duration != "" {
 		duration, _ = strconv.Atoi(movie.Duration)
 	} else {
@@ -602,6 +648,7 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	}
 
 	ageRestriction := 0
+
 	if movie.Age != "" {
 		ageRestriction, _ = strconv.Atoi(movie.Age)
 	} else {
@@ -641,16 +688,18 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	}
 
 	bodyBytes, err := json.Marshal(body)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createMovieURL, bytes.NewBuffer(bodyBytes))
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -659,9 +708,11 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	}
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		return 0, fmt.Errorf("request failed: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -670,6 +721,7 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 	}
 
 	unmarshalBody, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -702,7 +754,7 @@ func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, erro
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -750,7 +802,7 @@ func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID i
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.accessToken)
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 

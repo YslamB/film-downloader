@@ -1,5 +1,9 @@
 package models
 
+type RefreshTokenResponse struct {
+	AccessToken string `json:"token"`
+}
+
 type Source struct {
 	MasterFile string `json:"master_file"`
 	Quality    string `json:"quality"`

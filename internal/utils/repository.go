@@ -7,19 +7,28 @@ import (
 	"time"
 )
 
-type RepositoryConfig struct {
-	BaseURL     string
-	AccessToken string
-	Timeout     time.Duration
+type TokenProvider interface {
+	GetAccessToken() string
 }
 
-func DefaultRepositoryConfig(baseURL, accessToken string) *RepositoryConfig {
+type RepositoryConfig struct {
+	BaseURL       string
+	TokenProvider TokenProvider
+	Timeout       time.Duration
+}
+
+func DefaultRepositoryConfig(baseURL string, tokenProvider TokenProvider) *RepositoryConfig {
 	return &RepositoryConfig{
-		BaseURL:     baseURL,
-		AccessToken: accessToken,
-		Timeout:     10 * time.Second,
+		BaseURL:       baseURL,
+		TokenProvider: tokenProvider,
+		Timeout:       10 * time.Second,
 	}
 }
+
+// Example usage:
+// cfg := config.Init()
+// repoConfig := DefaultRepositoryConfig("https://api.example.com", cfg)
+// client := NewRepositoryClient(repoConfig)
 
 type RepositoryClient struct {
 	config *RepositoryConfig
@@ -37,7 +46,7 @@ func (rc *RepositoryClient) Get(ctx context.Context, endpoint string, target int
 	apiConfig := APIRequestConfig{
 		Method:      "GET",
 		URL:         url,
-		AccessToken: rc.config.AccessToken,
+		AccessToken: rc.config.TokenProvider.GetAccessToken(),
 		Timeout:     rc.config.Timeout,
 	}
 
@@ -51,7 +60,7 @@ func (rc *RepositoryClient) Post(ctx context.Context, endpoint string, body inte
 		Method:      "POST",
 		URL:         url,
 		Body:        body,
-		AccessToken: rc.config.AccessToken,
+		AccessToken: rc.config.TokenProvider.GetAccessToken(),
 		Timeout:     rc.config.Timeout,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -73,7 +82,7 @@ func (rc *RepositoryClient) Put(ctx context.Context, endpoint string, body inter
 		Method:      "PUT",
 		URL:         url,
 		Body:        body,
-		AccessToken: rc.config.AccessToken,
+		AccessToken: rc.config.TokenProvider.GetAccessToken(),
 		Timeout:     rc.config.Timeout,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -90,7 +99,7 @@ func (rc *RepositoryClient) Delete(ctx context.Context, endpoint string) error {
 	apiConfig := APIRequestConfig{
 		Method:      "DELETE",
 		URL:         url,
-		AccessToken: rc.config.AccessToken,
+		AccessToken: rc.config.TokenProvider.GetAccessToken(),
 		Timeout:     rc.config.Timeout,
 	}
 
@@ -104,7 +113,7 @@ func (rc *RepositoryClient) PostWithConflictHandling(ctx context.Context, endpoi
 		Method:      "POST",
 		URL:         url,
 		Body:        body,
-		AccessToken: rc.config.AccessToken,
+		AccessToken: rc.config.TokenProvider.GetAccessToken(),
 		Timeout:     rc.config.Timeout,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
