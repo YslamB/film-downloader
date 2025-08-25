@@ -15,10 +15,15 @@ import (
 func main() {
 	cfg := config.Init()
 	ctx, cancel := context.WithCancel(context.Background())
-
 	repo := repositories.NewMovieRepository(cfg)
+	err := cron.RefreshToken(ctx, cfg, repo)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// err := cron.DownloadWithID(ctx, "", "178440", "178438", cfg, repo)
-	err := cron.GetLastMovies(ctx, cfg, repo)
+	err = cron.GetLastMovies(ctx, cfg, repo)
 	// err := utils.UploadFolderToMinio(
 	// 	"test/fd29222081571ec9eb1df30ec3956cf7/video/480p", "fd29222081571ec9eb1df30ec3956cf7/video/480p",
 	// 	cfg.MINIO_BUCKET, cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY,

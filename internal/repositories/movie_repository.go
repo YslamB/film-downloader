@@ -63,11 +63,22 @@ func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad response: %s", resp.Status)
+	}
+	cookies := resp.Header["Set-Cookie"]
+
+	if len(cookies) > 0 {
+		fmt.Println("🍪 Received Set-Cookie headers:", cookies)
+		cookie := ""
+
+		for i := range cookies {
+			cookie += cookies[i] + ";"
+		}
+
+		r.cfg.SetCookie(cookie)
 	}
 
 	body, err := io.ReadAll(resp.Body)

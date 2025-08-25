@@ -37,7 +37,6 @@ func Init() *Config {
 		log.Fatal("Error loading .env file")
 	}
 
-	cfg.accessToken = utils.LoadString("ACCESS_TOKEN")
 	cfg.Cookie = utils.LoadString("COOKIE")
 	cfg.DB_HOST = utils.LoadString("DB_HOST")
 	cfg.DB_PORT = utils.LoadString("DB_PORT")
@@ -68,4 +67,26 @@ func (c *Config) SetAccessToken(token string) {
 	c.tokenMutex.Lock()
 	defer c.tokenMutex.Unlock()
 	c.accessToken = token
+}
+
+func (c *Config) SetCookie(cookie string) {
+	c.tokenMutex.Lock()
+	defer c.tokenMutex.Unlock()
+	c.Cookie = cookie
+
+	// Read existing environment variables first
+	envVars, err := godotenv.Read(".env")
+	if err != nil {
+		// If .env file doesn't exist, create a new map
+		envVars = make(map[string]string)
+	}
+
+	// Update only the COOKIE2 value while preserving others
+	envVars["COOKIE"] = cookie
+
+	// Write back all environment variables
+	err = godotenv.Write(envVars, ".env")
+	if err != nil {
+		log.Fatal("Error writing to .env file")
+	}
 }
