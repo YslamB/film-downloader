@@ -1,20 +1,39 @@
 package models
 
+const (
+	MovieType   = 1
+	EpisodeType = 2
+)
+
+type Episode struct {
+	ID       int      `json:"id"`
+	Name     string   `json:"name"`
+	Duration string   `json:"duration"`
+	FileID   string   `json:"file_id"`
+	Sources  []Source `json:"sources"`
+}
+
+type EpisodeResponse struct {
+	Episodes []Episode `json:"episodes"`
+}
+
 type RefreshTokenResponse struct {
 	AccessToken string `json:"token"`
 }
 
 type Source struct {
-	MasterFile string `json:"master_file"`
-	Quality    string `json:"quality"`
-	Type       string `json:"type"`
-	Main       bool   `json:"main"`
+	MasterFile  string `json:"master_file"`
+	Quality     string `json:"quality"`
+	Type        string `json:"type"`
+	Main        bool   `json:"main"`
+	DownloadURL string `json:"download_url"`
 }
 
 type Movie struct {
 	ID      int
 	Name    string
 	Sources []Source
+	Type    int
 }
 
 type MovieResponse struct {
@@ -104,6 +123,7 @@ type MediaInfo struct {
 type Season struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+	BBID int    `json:"bb_id"`
 }
 
 type Studio struct {

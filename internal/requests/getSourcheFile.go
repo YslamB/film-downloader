@@ -32,7 +32,7 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config, mo
 	err := utils.MakeJSONRequest(ctx, apiConfig, &result)
 
 	if err != nil {
-		return []models.Movie{}, utils.WrapErrorf(err, "failed to get film source URL for film ID %s", filmID)
+		return movies, utils.WrapErrorf(err, "failed to get film source URL for film ID %s", filmID)
 	}
 
 	for _, source := range result.Sources {
@@ -49,7 +49,7 @@ func GetFilmSourceURL(ctx context.Context, filmID string, cfg *config.Config, mo
 	movie.Name, err = utils.GenerateUUID()
 
 	if err != nil {
-		return []models.Movie{}, utils.WrapError(err, "failed to generate UUID")
+		return movies, utils.WrapError(err, "failed to generate UUID")
 	}
 
 	movie.ID = movieID

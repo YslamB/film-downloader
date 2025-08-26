@@ -26,6 +26,7 @@ const (
 	refreshTokenURL    = "https://api.belet.tm/api/v1/auth/refresh"
 	getMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
 	createMovieURL     = "http://95.85.126.217:5050/api/v1/admin/movies"
+	createSeasonURL    = "http://95.85.126.217:5050/api/v1/admin/seasons"
 	getCategoryIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
 	getGenreIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
 	getCountryIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
@@ -44,8 +45,53 @@ func NewMovieRepository(cfg *config.Config) *MovieRepository {
 	}
 }
 
-func (r *MovieRepository) RefreshToken(ctx context.Context) error {
+func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID string) (int, error) {
+	fmt.Println("🎬 Creating season:", seasonName, "for movie ID:", movieID)
+	body := map[string]any{
+		"movie_id": movieID,
+		"number":   1,
+		"title":    seasonName,
+	}
+	bodyBytes, err := json.Marshal(body)
 
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createSeasonURL, bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return 0, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
+	}
+
+	var response models.GetIDResponse
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return 0, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	fmt.Println("✅ Season created successfully with ID:", response.ID)
+	return response.ID, nil
+}
+
+func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, refreshTokenURL, nil)
 
 	if err != nil {
@@ -53,7 +99,6 @@ func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 	}
 
 	req.Header.Set("Cookie", r.cfg.Cookie)
-
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -94,16 +139,15 @@ func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 	}
 
 	r.cfg.SetAccessToken(response.AccessToken)
-
 	return nil
 }
 
-func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) (bool, error) {
+func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) (int, error) {
 	fmt.Println("🔍 Checking movie with ID:", movieID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(getMovieURL, movieID), nil)
 
 	if err != nil {
-		return false, fmt.Errorf("failed to create request: %w", err)
+		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	client := &http.Client{
@@ -112,16 +156,21 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return false, fmt.Errorf("request failed: %w", err)
+		return 0, fmt.Errorf("request failed: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-		return true, nil
+		var response models.GetIDResponse
+
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return 0, fmt.Errorf("failed to decode response: %w", err)
+		}
+		return response.ID, nil
 	}
 
-	return false, nil
+	return 0, nil
 }
 
 func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (int, error) {

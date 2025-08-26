@@ -142,17 +142,12 @@ func (rc *RepositoryClient) PostWithConflictHandling(ctx context.Context, endpoi
 }
 
 type BatchRequest struct {
-	operations   []func(context.Context) error
-	delayManager *DelayManager
+	operations []func(context.Context) error
 }
 
 func NewBatchRequest() *BatchRequest {
-	dm := NewDelayManager()
-	dm.SetAPIDelay()
-
 	return &BatchRequest{
-		operations:   make([]func(context.Context) error, 0),
-		delayManager: dm,
+		operations: make([]func(context.Context) error, 0),
 	}
 }
 
@@ -164,10 +159,6 @@ func (br *BatchRequest) Execute(ctx context.Context) error {
 	for i, operation := range br.operations {
 		if err := operation(ctx); err != nil {
 			return WrapErrorf(err, "batch operation %d failed", i)
-		}
-
-		if i < len(br.operations)-1 {
-			br.delayManager.Execute("api")
 		}
 	}
 	return nil

@@ -1,39 +1,37 @@
 package requests
 
 import (
+	"context"
 	"encoding/json"
 	"film-downloader/internal/config"
 	"film-downloader/internal/models"
+	"film-downloader/internal/repositories"
 	"film-downloader/internal/utils"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
-func GetEpisodesSourceWithSeasonID(seasonID, episodeID string, cfg *config.Config) ([]models.Movie, error) {
+const (
+	episodesURL = "https://film.beletapis.com/api/v2/episodes?seasonId=%s"
+)
+
+func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, cfg *config.Config, repo *repositories.MovieRepository) ([]models.Movie, error) {
 	var movies []models.Movie
-	url := fmt.Sprintf("https://film.beletapis.com/api/v2/episodes?seasonId=%s", seasonID)
+	url := fmt.Sprintf(episodesURL, fmt.Sprintf("%d", season.ID))
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
 		return movies, fmt.Errorf("❌ failed to create request: %w", err)
 	}
+
 	req.Header.Set("Authorization", cfg.GetAccessToken())
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Pragma", "no-cache")
-	req.Header.Set("Sec-Ch-Ua", `"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"`)
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", `"macOS"`)
-	req.Header.Set("Sec-Fetch-Dest", "empty")
-	req.Header.Set("Sec-Fetch-Mode", "cors")
-	req.Header.Set("Sec-Fetch-Site", "same-origin")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+	utils.SetCommonHeaders(req, cfg.GetAccessToken())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+
 	if err != nil {
 		return movies, fmt.Errorf("❌ request failed: %w", err)
 	}
@@ -48,60 +46,52 @@ func GetEpisodesSourceWithSeasonID(seasonID, episodeID string, cfg *config.Confi
 		return movies, fmt.Errorf("❌ failed to read response: %w", err)
 	}
 
-	var result struct {
-		Episodes []struct {
-			ID      int    `json:"id"`
-			Name    string `json:"name"`
-			Sources []struct {
-				DownloadURL string `json:"download_url"`
-				Quality     string `json:"quality"`
-			} `json:"sources"`
-		} `json:"episodes"`
-	}
+	var result models.EpisodeResponse
 
 	if err := json.Unmarshal(body, &result); err != nil {
 		return movies, fmt.Errorf("❌ failed to parse JSON: %w", err)
 	}
 
 	for _, ep := range result.Episodes {
-		idStr := fmt.Sprintf("%d", ep.ID)
-		for _, source := range ep.Sources {
+		// create episode
+		ep.FileID, err = utils.GenerateUUID()
+
+		if err != nil {
+			return movies, fmt.Errorf("❌ failed to generate UUID: %w", err)
+		}
+
+		episodeBBID, err := repo.CreateEpisode(ctx, ep, season.BBID)
+		time.Sleep(1 * time.Second)
+
+		if err != nil {
+			return movies, fmt.Errorf("❌ failed to create episode: %w", err)
+		}
+
+		for i := range ep.Sources {
 			main := false
 
-			if source.Quality == "1080p" {
+			if ep.Sources[i].Quality == "1080p" {
 				main = true
 			}
-
-			uuid, err := utils.GenerateUUID()
 
 			if err != nil {
 				return movies, fmt.Errorf("failed to generate UUID: %w", err)
 			}
 
-			movie := models.Movie{Name: uuid}
+			movie := models.Movie{Name: ep.FileID, ID: episodeBBID, Type: models.EpisodeType}
 
-			if episodeID != "" && idStr == episodeID {
-				movie.Sources = append(movie.Sources, models.Source{
-					MasterFile: source.DownloadURL,
-					Quality:    source.Quality,
-					Main:       main,
-				})
-			}
-
-			if episodeID == "" {
-				movie.Sources = append(movie.Sources, models.Source{
-					MasterFile: source.DownloadURL,
-					Quality:    source.Quality,
-					Main:       main,
-				})
-			}
+			movie.Sources = append(movie.Sources, models.Source{
+				MasterFile: ep.Sources[i].DownloadURL,
+				Quality:    ep.Sources[i].Quality,
+				Main:       main,
+			})
 
 			movies = append(movies, movie)
 		}
 	}
 
-	if episodeID != "" && len(movies) == 0 {
-		return movies, fmt.Errorf("❌ episode %s not found or has no 1080p source", episodeID)
+	if season != nil && len(movies) == 0 {
+		return movies, fmt.Errorf("❌ season %s not found or has no 1080p source", season.Name)
 	}
 
 	return movies, nil

@@ -10,19 +10,23 @@ import (
 	"film-downloader/internal/utils"
 )
 
+const (
+	movieDataURL = "https://film.beletapis.com/api/v2/movie/%s"
+	searchURL    = "https://film-search.belet.me/api/v1/search"
+)
+
 func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (models.MovieResponse, error) {
 	var movieResponse models.MovieResponse
 
-	url := fmt.Sprintf("https://film.beletapis.com/api/v2/movie/%s", movieID)
-
 	apiConfig := utils.APIRequestConfig{
 		Method:      "GET",
-		URL:         url,
+		URL:         fmt.Sprintf(movieDataURL, movieID),
 		AccessToken: cfg.GetAccessToken(),
 		Timeout:     30 * time.Second,
 	}
 
 	err := utils.MakeJSONRequest(ctx, apiConfig, &movieResponse)
+
 	if err != nil {
 		return movieResponse, utils.WrapErrorf(err, "failed to get movie data for ID %s", movieID)
 	}
@@ -30,43 +34,18 @@ func GetMovieData(ctx context.Context, movieID string, cfg *config.Config) (mode
 	return movieResponse, nil
 }
 
-func GetSeasonsData(ctx context.Context, movieID string, cfg *config.Config) ([]models.Season, error) {
-	var movieResponse models.MovieResponse
-	url := fmt.Sprintf("https://film.beletapis.com/api/v2/movie/%s", movieID)
-
-	apiConfig := utils.APIRequestConfig{
-		Method:      "GET",
-		URL:         url,
-		AccessToken: cfg.GetAccessToken(),
-		Timeout:     10 * time.Second,
-	}
-
-	err := utils.MakeJSONRequest(ctx, apiConfig, &movieResponse)
-	if err != nil {
-		return nil, utils.WrapErrorf(err, "failed to get seasons data for movie ID %s", movieID)
-	}
-
-	return movieResponse.Film.Seasons, nil
-}
-
-type SearchRequest struct {
-	Page  int    `json:"page"`
-	Order string `json:"order"`
-}
-
 func GetSearchResults(ctx context.Context, page int, cfg *config.Config) (models.SearchResult, error) {
 	var searchResult models.SearchResult
 
-	url := "https://film-search.belet.me/api/v1/search"
-
-	requestBody := SearchRequest{
+	requestBody := models.SearchRequest{
 		Page:  page,
 		Order: "desc",
+		Sort:  "add",
 	}
 
 	apiConfig := utils.APIRequestConfig{
 		Method:      "POST",
-		URL:         url,
+		URL:         searchURL,
 		Body:        requestBody,
 		AccessToken: cfg.GetAccessToken(),
 		Timeout:     30 * time.Second,
@@ -76,9 +55,9 @@ func GetSearchResults(ctx context.Context, page int, cfg *config.Config) (models
 	}
 
 	err := utils.MakeJSONRequest(ctx, apiConfig, &searchResult)
+
 	if err != nil {
 		return searchResult, utils.WrapErrorf(err, "failed to get search results for page %d", page)
 	}
-
 	return searchResult, nil
 }
