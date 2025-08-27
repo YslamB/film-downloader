@@ -18,17 +18,18 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
 	repo := repositories.NewMovieRepository(cfg)
-	err := cron.RefreshToken(ctx, cfg, repo)
 
+	err := cron.RefreshToken(ctx, cfg, repo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := cron.GetLastMovies(ctx, cfg, repo, &wg)
-
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error in GetLastMovies: %v", err)
 		}
 	}()
 
@@ -46,8 +47,7 @@ func main() {
 	<-quit
 
 	fmt.Println("Received shutdown signal...")
-	wg.Wait()
-	cancel() // Cancel the context to signal goroutines to stop
+	cancel()  // Cancel the context to signal goroutines to stop
+	wg.Wait() // Wait for all goroutines to finish
 	log.Println("Shutting down server...")
-
 }

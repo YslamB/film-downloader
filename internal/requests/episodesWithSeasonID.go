@@ -54,10 +54,17 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 
 	for _, ep := range result.Episodes {
 		// create episode
-		ep.FileID, err = utils.GenerateUUID()
+		ep.FilePath, err = utils.GenerateUUID()
 
 		if err != nil {
 			return movies, fmt.Errorf("❌ failed to generate UUID: %w", err)
+		}
+
+		ep.FilePath += fmt.Sprintf("/seasons/%d", season.BBID)
+		ep.FileID, err = repo.GetFileID(ctx, ep.FilePath)
+
+		if err != nil {
+			return movies, fmt.Errorf("❌ failed to get file ID: %w", err)
 		}
 
 		episodeBBID, err := repo.CreateEpisode(ctx, ep, season.BBID)
@@ -67,18 +74,14 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 			return movies, fmt.Errorf("❌ failed to create episode: %w", err)
 		}
 
+		movie := models.Movie{Name: ep.FilePath, ID: episodeBBID, Type: models.EpisodeType}
+
 		for i := range ep.Sources {
 			main := false
 
 			if ep.Sources[i].Quality == "1080p" {
 				main = true
 			}
-
-			if err != nil {
-				return movies, fmt.Errorf("failed to generate UUID: %w", err)
-			}
-
-			movie := models.Movie{Name: ep.FileID, ID: episodeBBID, Type: models.EpisodeType}
 
 			movie.Sources = append(movie.Sources, models.Source{
 				MasterFile: ep.Sources[i].DownloadURL,

@@ -7,7 +7,6 @@ import (
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 )
@@ -79,22 +78,58 @@ func DownloadWithID(ctx context.Context, episodeID string, season *models.Season
 				return err
 			}
 
-			err = os.RemoveAll("temp/" + movies[i].Name)
+			// err = os.RemoveAll("temp/" + movies[i].Name)
 
-			if err != nil {
-				return err
-			}
+			// if err != nil {
+			// 	return err
+			// }
 		}
 
 	}
 
 	if season != nil {
 		movies, err = requests.GetEpisodesSourceWithSeasonID(ctx, season, cfg, repo)
-		time.Sleep(1 * time.Second)
 
 		if err != nil {
 			return err
 		}
+
+		time.Sleep(1 * time.Second)
+		for i := range movies {
+			// err := downloader.DownloadHLS(movies[i], cfg)
+
+			// if err != nil {
+			// 	return err
+			// }
+
+			// err = utils.UploadFolderToMinio(
+			// 	"temp/"+movies[i].Name, movies[i].Name, cfg.MINIO_BUCKET,
+			// 	cfg.MINIO_ENDPOINT, cfg.MINIO_ACCESS_KEY, cfg.MINIO_SECRET_KEY,
+			// 	cfg.MINIO_SECURE, cfg.MINIO_WORKERS,
+			// )
+
+			// if err != nil {
+			// 	return err
+			// }
+			fileID, err := repo.GetFileID(ctx, movies[i].Name)
+
+			if err != nil {
+				return err
+			}
+
+			err = repo.CreateMovieFile(ctx, fileID, movies[i].ID)
+
+			if err != nil {
+				return err
+			}
+
+			// err = os.RemoveAll("temp/" + movies[i].Name)
+
+			// if err != nil {
+			// 	return err
+			// }
+		}
+
 	}
 
 	return nil
@@ -107,14 +142,14 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 		return fmt.Errorf("failed to get search results from API: %w", err)
 	}
 
+	// Process films sequentially to avoid WaitGroup reuse issues
 	for i := range searchResult.Films {
-		wg.Add(1)
+		// Check if context is cancelled
 
 		filmID := fmt.Sprintf("%d", searchResult.Films[i].ID)
 
 		if searchResult.Films[i].TypeID == 1 {
 			err := DownloadWithID(ctx, "", nil, filmID, cfg, repo)
-			wg.Done()
 
 			if err != nil {
 				fmt.Println("Error downloading movie:", err)
@@ -126,6 +161,7 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 
 			if err != nil {
 				fmt.Println("Error creating movie:", err)
+				continue
 			}
 
 			seasons, err := CreateMovieSeasons(ctx, fmt.Sprintf("%d", bbmovieID), filmID, cfg, repo)
@@ -135,34 +171,16 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 				continue
 			}
 
-			for i := range seasons {
-				fmt.Println("IIIIII  :::  ", i)
-				err := DownloadWithID(ctx, "", &seasons[i], filmID, cfg, repo)
+			for j := range seasons {
+				fmt.Println("starting create one season episodes  :::  ", j)
+				err := DownloadWithID(ctx, "", &seasons[j], filmID, cfg, repo)
 
 				if err != nil {
 					fmt.Println("Error downloading movie episodes:", err)
 					continue
 				}
 			}
-
-			wg.Done()
-			continue
-			// seasons, err := requests.GetSeasonsData(ctx, filmID, cfg)
-
-			// if err != nil {
-			// 	continue
-			// }
-
-			// for i := range seasons {
-			// 	err := DownloadWithID(ctx, "", fmt.Sprintf("%d", seasons[i].ID), filmID, cfg, repo)
-
-			// 	if err != nil {
-			// 		continue
-			// 	}
-			// }
-
 		}
-
 	}
 
 	return nil

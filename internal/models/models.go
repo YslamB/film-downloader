@@ -6,11 +6,13 @@ const (
 )
 
 type Episode struct {
-	ID       int      `json:"id"`
+	Sources  []Source `json:"sources"`
 	Name     string   `json:"name"`
 	Duration string   `json:"duration"`
-	FileID   string   `json:"file_id"`
-	Sources  []Source `json:"sources"`
+	FilePath string   `json:"file_path"`
+	Image    string   `json:"image"`
+	ID       int      `json:"id"`
+	FileID   int      `json:"file_id"`
 }
 
 type EpisodeResponse struct {
@@ -25,15 +27,15 @@ type Source struct {
 	MasterFile  string `json:"master_file"`
 	Quality     string `json:"quality"`
 	Type        string `json:"type"`
-	Main        bool   `json:"main"`
 	DownloadURL string `json:"download_url"`
+	Main        bool   `json:"main"`
 }
 
 type Movie struct {
 	ID      int
+	Type    int
 	Name    string
 	Sources []Source
-	Type    int
 }
 
 type MovieResponse struct {

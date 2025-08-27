@@ -158,14 +158,12 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 
 func CreateMovieSeasons(ctx context.Context, movieID, filmID string, cfg *config.Config, repo *repositories.MovieRepository) ([]models.Season, error) {
 	movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
-
 	if err != nil {
-		return movieRes.Film.Seasons, err
+		return nil, err
 	}
 
 	for i := range movieRes.Film.Seasons {
 		seasonID, err := repo.CreateSeason(ctx, movieRes.Film.Seasons[i].Name, movieID)
-
 		if err != nil {
 			return movieRes.Film.Seasons, err
 		}

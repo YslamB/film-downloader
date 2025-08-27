@@ -27,6 +27,7 @@ const (
 	getMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
 	createMovieURL     = "http://95.85.126.217:5050/api/v1/admin/movies"
 	createSeasonURL    = "http://95.85.126.217:5050/api/v1/admin/seasons"
+	createEpisodeURL   = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes"
 	getCategoryIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
 	getGenreIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
 	getCountryIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
@@ -45,15 +46,36 @@ func NewMovieRepository(cfg *config.Config) *MovieRepository {
 	}
 }
 
+// Helper function to decode response that could be either a number or an object with ID
+func decodeIDResponse(bodyBytes []byte) (int, error) {
+	// Try to unmarshal as GetIDResponse first
+	var response models.GetIDResponse
+	if err := json.Unmarshal(bodyBytes, &response); err != nil {
+		// If that fails, try to unmarshal as a plain number
+		var id int
+		if numErr := json.Unmarshal(bodyBytes, &id); numErr != nil {
+			return 0, fmt.Errorf("failed to decode response as object or number: object_err=%w, number_err=%w, body=%s", err, numErr, string(bodyBytes))
+		}
+		return id, nil
+	}
+	return response.ID, nil
+}
+
 func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID string) (int, error) {
 	fmt.Println("🎬 Creating season:", seasonName, "for movie ID:", movieID)
+
+	// Convert movieID from string to int
+	movieIDInt, err := strconv.Atoi(movieID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid movieID format: %w", err)
+	}
+
 	body := map[string]any{
-		"movie_id": movieID,
+		"movie_id": movieIDInt,
 		"number":   1,
 		"title":    seasonName,
 	}
 	bodyBytes, err := json.Marshal(body)
-
 	if err != nil {
 		return 0, fmt.Errorf("failed to marshal request body: %w", err)
 	}
@@ -61,10 +83,14 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createSeasonURL, bytes.NewBuffer(bodyBytes))
 
 	if err != nil {
+		fmt.Println("sd8fiui")
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Authorization", r.cfg.GetAccessToken())
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("accept", "application/json")
+
 	client := &http.Client{
 		Timeout: time.Second * 30,
 	}
@@ -72,23 +98,31 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID 
 	resp, err := client.Do(req)
 
 	if err != nil {
+		fmt.Println("sd90f8io")
 		return 0, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
+		fmt.Println("s89dji")
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
-	var response models.GetIDResponse
-
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return 0, fmt.Errorf("failed to decode response: %w", err)
+	// Read the response body first to see what we get
+	bodyBytes, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	fmt.Println("✅ Season created successfully with ID:", response.ID)
-	return response.ID, nil
+	seasonID, err := decodeIDResponse(bodyBytes)
+	if err != nil {
+		fmt.Println("sdf89 - CreateSeason decode error")
+		return 0, fmt.Errorf("failed to decode CreateSeason response: %w", err)
+	}
+
+	fmt.Println("✅ Season created successfully with ID:", seasonID)
+	return seasonID, nil
 }
 
 func (r *MovieRepository) RefreshToken(ctx context.Context) error {
@@ -163,9 +197,15 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 
 	if resp.StatusCode == http.StatusOK {
 		var response models.GetIDResponse
+		body, err := io.ReadAll(resp.Body)
 
-		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			return 0, fmt.Errorf("failed to decode response: %w", err)
+		if err != nil {
+			return 0, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		response.ID, err = strconv.Atoi(string(body))
+		if err != nil {
+			return 0, fmt.Errorf("failed to convert response body to int: %w", err)
 		}
 		return response.ID, nil
 	}
@@ -216,7 +256,7 @@ func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (in
 	err = json.NewDecoder(resp.Body).Decode(&category)
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to decode response: %w", err)
+		return 0, fmt.Errorf("failed to decode response s98d8jn: %w", err)
 	}
 
 	return category.ID, nil
@@ -267,7 +307,7 @@ func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]i
 		err = json.NewDecoder(resp.Body).Decode(&genre)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode response s8d9fu98: %w", err)
 		}
 
 		genreIDs = append(genreIDs, genre.ID)
@@ -320,7 +360,7 @@ func (r *MovieRepository) GetCountryIDs(ctx context.Context, countries []models.
 		err = json.NewDecoder(resp.Body).Decode(&country)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode response s98dfuj: %w", err)
 		}
 
 		countryIDs = append(countryIDs, country.ID)
@@ -415,7 +455,7 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 		err = json.NewDecoder(resp.Body).Decode(&actorRes)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode response soidfj: %w", err)
 		}
 
 		if resp.StatusCode == http.StatusConflict {
@@ -591,7 +631,7 @@ func (r *MovieRepository) uploadImage(ctx context.Context, imageData io.ReadClos
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return 0, fmt.Errorf("failed to decode response: %w", err)
+		return 0, fmt.Errorf("failed to decode response sd8f9: %w", err)
 	}
 
 	return response.ID, nil
@@ -641,7 +681,7 @@ func (r *MovieRepository) GetStudioIDs(ctx context.Context, studios []models.Stu
 		err = json.NewDecoder(resp.Body).Decode(&studio)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode response: %w", err)
+			return nil, fmt.Errorf("failed to decode response sd9f8ji: %w", err)
 		}
 
 		studioIDs = append(studioIDs, studio.ID)
@@ -690,7 +730,7 @@ func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (i
 	var language_response models.GetIDResponse
 	err = json.NewDecoder(resp.Body).Decode(&language_response)
 	if err != nil {
-		return 0, fmt.Errorf("failed to decode response: %w", err)
+		return 0, fmt.Errorf("failed to decode response sduf8h98s: %w", err)
 	}
 
 	return language_response.ID, nil
@@ -786,14 +826,13 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 		return 0, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var response models.GetIDResponse
-
-	if err := json.Unmarshal(unmarshalBody, &response); err != nil {
-		return 0, fmt.Errorf("failed to unmarshal response: %w", err)
+	movieID, err := decodeIDResponse(unmarshalBody)
+	if err != nil {
+		return 0, fmt.Errorf("failed to decode CreateMovie response: %w", err)
 	}
 
-	fmt.Println("✅ Movie created successfully with ID:", response.ID)
-	return response.ID, nil
+	fmt.Println("✅ Movie created successfully with ID:", movieID)
+	return movieID, nil
 }
 
 func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, error) {
@@ -835,7 +874,7 @@ func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, erro
 
 	var response models.GetIDResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return 0, fmt.Errorf("failed to decode response: %w", err)
+		return 0, fmt.Errorf("failed to decode response s98dfu98sd: %w", err)
 	}
 
 	fmt.Println("✅ Movie file created successfully with ID:", response.ID)
@@ -884,4 +923,79 @@ func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID i
 
 	fmt.Println("✅ Successfully assigned file to movie")
 	return nil
+}
+
+func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Episode, seasonID int) (int, error) {
+	fmt.Println("📺 Creating episode:", episode.Name, "for season ID:", seasonID)
+
+	var imageInfo struct {
+		URL    string `json:"url"`
+		Width  int    `json:"width"`
+		Height int    `json:"height"`
+	}
+	imageInfo.URL = episode.Image
+	imageInfo.Width = 640
+	imageInfo.Height = 360
+	imageData, filename, err := r.downloadImage(ctx, imageInfo.URL)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to download image: %w", err)
+	}
+	defer imageData.Close()
+	imageID, err := r.uploadImage(ctx, imageData, filename, imageInfo.Width, imageInfo.Height)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to upload image: %w", err)
+	}
+	duration := 30
+
+	if episode.Duration != "" {
+		if parsed, err := strconv.Atoi(episode.Duration); err == nil {
+			duration = parsed
+		}
+	}
+
+	body := map[string]any{
+		"duration":  duration,
+		"file_id":   episode.FileID,
+		"image_id":  imageID,
+		"number":    1,
+		"season_id": seasonID,
+		"title":     episode.Name,
+	}
+	bodyBytes, err := json.Marshal(body)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createEpisodeURL, bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", r.cfg.GetAccessToken())
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return 0, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
+	}
+	var response models.GetIDResponse
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return 0, fmt.Errorf("failed to decode response sd89fus9i8df: %w", err)
+	}
+	fmt.Println("✅ Episode created successfully with ID:", response.ID)
+	return response.ID, nil
 }
