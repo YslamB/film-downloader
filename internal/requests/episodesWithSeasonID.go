@@ -42,6 +42,7 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 	}
 
 	body, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return movies, fmt.Errorf("❌ failed to read response: %w", err)
 	}
@@ -53,7 +54,13 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 	}
 
 	for _, ep := range result.Episodes {
-		// create episode
+		err = repo.CheckEpisodeExists(ctx, ep.ID)
+
+		if err != nil {
+			fmt.Println("❌ episode already exists:", err)
+			continue
+		}
+
 		ep.FilePath, err = utils.GenerateUUID()
 
 		if err != nil {
@@ -74,7 +81,11 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 			return movies, fmt.Errorf("❌ failed to create episode: %w", err)
 		}
 
-		movie := models.Movie{Name: ep.FilePath, ID: episodeBBID, Type: models.EpisodeType}
+		movie := models.Movie{
+			Name: ep.FilePath,
+			ID:   episodeBBID,
+			Type: models.EpisodeType,
+		}
 
 		for i := range ep.Sources {
 			main := false

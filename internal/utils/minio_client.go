@@ -235,8 +235,5 @@ func UploadFolderToMinio(localFolderPath, prefix, bucketName, endpoint, accessKe
 		return fmt.Errorf("upload failed with %d errors, first error: %w", len(uploadErrors), uploadErrors[0])
 	}
 
-	masterPath := filepath.Join("movies", localFolderPath, "master.m3u8")
-	fmt.Printf("✅ Upload completed successfully. Master path: %s\n", masterPath)
-	fmt.Printf("📊 Total files uploaded: %d\n", len(files))
 	return nil
 }

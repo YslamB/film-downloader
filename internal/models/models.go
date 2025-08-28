@@ -32,10 +32,10 @@ type Source struct {
 }
 
 type Movie struct {
+	Sources []Source
+	Name    string
 	ID      int
 	Type    int
-	Name    string
-	Sources []Source
 }
 
 type MovieResponse struct {

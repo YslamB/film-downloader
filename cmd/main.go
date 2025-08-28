@@ -24,10 +24,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		err := cron.GetLastMovies(ctx, cfg, repo, &wg)
+
 		if err != nil {
 			log.Printf("Error in GetLastMovies: %v", err)
 		}
@@ -47,7 +46,7 @@ func main() {
 	<-quit
 
 	fmt.Println("Received shutdown signal...")
-	cancel()  // Cancel the context to signal goroutines to stop
 	wg.Wait() // Wait for all goroutines to finish
+	cancel()  // Cancel the context to signal goroutines to stop
 	log.Println("Shutting down server...")
 }

@@ -23,21 +23,22 @@ type MovieRepository struct {
 }
 
 const (
-	refreshTokenURL    = "https://api.belet.tm/api/v1/auth/refresh"
-	getMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
-	createMovieURL     = "http://95.85.126.217:5050/api/v1/admin/movies"
-	createSeasonURL    = "http://95.85.126.217:5050/api/v1/admin/seasons"
-	createEpisodeURL   = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes"
-	getCategoryIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
-	getGenreIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
-	getCountryIDURL    = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
-	getActorIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons"
-	getStudioIDURL     = "http://95.85.126.217:5050/api/v1/admin/catalogs/studios"
-	getLanguageIDURL   = "http://95.85.126.217:5050/api/v1/admin/catalogs/languages"
-	sendImageURL       = "http://95.85.126.217:5050/api/v1/admin/movies/images"
-	updateActorURL     = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons/%d"
-	createMovieFileURL = "http://95.85.126.217:5050/api/v1/admin/movies/file"
-	assignMovieFileURL = "http://95.85.126.217:5050/api/v1/admin/movies/files"
+	refreshTokenURL       = "https://api.belet.tm/api/v1/auth/refresh"
+	getMovieURL           = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
+	createMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies"
+	createSeasonURL       = "http://95.85.126.217:5050/api/v1/admin/seasons"
+	createEpisodeURL      = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes"
+	getCategoryIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
+	getGenreIDURL         = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
+	getCountryIDURL       = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
+	getActorIDURL         = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons"
+	getStudioIDURL        = "http://95.85.126.217:5050/api/v1/admin/catalogs/studios"
+	getLanguageIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/languages"
+	sendImageURL          = "http://95.85.126.217:5050/api/v1/admin/movies/images"
+	updateActorURL        = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons/%d"
+	createMovieFileURL    = "http://95.85.126.217:5050/api/v1/admin/movies/file"
+	assignMovieFileURL    = "http://95.85.126.217:5050/api/v1/admin/movies/files"
+	checkEpisodeExistsURL = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes/ext/%d"
 )
 
 func NewMovieRepository(cfg *config.Config) *MovieRepository {
@@ -61,8 +62,8 @@ func decodeIDResponse(bodyBytes []byte) (int, error) {
 	return response.ID, nil
 }
 
-func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID string) (int, error) {
-	fmt.Println("🎬 Creating season:", seasonName, "for movie ID:", movieID)
+func (r *MovieRepository) CreateSeason(ctx context.Context, season models.Season, movieID string) (int, error) {
+	fmt.Println("🎬 Creating season:", season.Name, "for movie ID:", movieID)
 
 	// Convert movieID from string to int
 	movieIDInt, err := strconv.Atoi(movieID)
@@ -73,9 +74,11 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID 
 	body := map[string]any{
 		"movie_id": movieIDInt,
 		"number":   1,
-		"title":    seasonName,
+		"title":    season.Name,
+		"ext_id":   season.ID,
 	}
 	bodyBytes, err := json.Marshal(body)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to marshal request body: %w", err)
 	}
@@ -87,7 +90,6 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID 
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -109,13 +111,14 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, seasonName, movieID 
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
-	// Read the response body first to see what we get
 	bodyBytes, err = io.ReadAll(resp.Body)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	seasonID, err := decodeIDResponse(bodyBytes)
+
 	if err != nil {
 		fmt.Println("sdf89 - CreateSeason decode error")
 		return 0, fmt.Errorf("failed to decode CreateSeason response: %w", err)
@@ -901,7 +904,6 @@ func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID i
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", r.cfg.GetAccessToken())
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("accept", "application/json")
 
@@ -960,6 +962,7 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 		"file_id":   episode.FileID,
 		"image_id":  imageID,
 		"number":    1,
+		"ext_id":    episode.ID,
 		"season_id": seasonID,
 		"title":     episode.Name,
 	}
@@ -991,6 +994,10 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 		body, _ := io.ReadAll(resp.Body)
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
+
+	if resp.StatusCode == http.StatusConflict {
+		return 0, fmt.Errorf("episode already exists")
+	}
 	var response models.GetIDResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
@@ -998,4 +1005,32 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 	}
 	fmt.Println("✅ Episode created successfully with ID:", response.ID)
 	return response.ID, nil
+}
+
+func (r *MovieRepository) CheckEpisodeExists(ctx context.Context, extID int) error {
+	url := fmt.Sprintf(checkEpisodeExistsURL, extID)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		return fmt.Errorf("episode with external ID %d already exists", extID)
+	}
+	return nil
 }

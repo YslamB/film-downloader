@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"errors"
 	"film-downloader/internal/config"
 	"film-downloader/internal/models"
 	"film-downloader/internal/repositories"
@@ -42,7 +43,7 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 	}
 
 	if movieID != 0 {
-		return movieID, nil
+		return movieID, errors.New("movie already exists")
 	}
 
 	movieRes.Film.CategoryID, err = repo.GetCategoryID(ctx, movieRes.Film.CategoryID)
@@ -158,12 +159,14 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 
 func CreateMovieSeasons(ctx context.Context, movieID, filmID string, cfg *config.Config, repo *repositories.MovieRepository) ([]models.Season, error) {
 	movieRes, err := requests.GetMovieData(ctx, filmID, cfg)
+
 	if err != nil {
 		return nil, err
 	}
 
 	for i := range movieRes.Film.Seasons {
-		seasonID, err := repo.CreateSeason(ctx, movieRes.Film.Seasons[i].Name, movieID)
+		seasonID, err := repo.CreateSeason(ctx, movieRes.Film.Seasons[i], movieID)
+
 		if err != nil {
 			return movieRes.Film.Seasons, err
 		}

@@ -306,10 +306,9 @@ func generateLocalMasterPlaylist(movie models.Movie, audioM3U8s, subtitleM3U8s m
 	if len(subtitleM3U8s) > 0 {
 		subsGroup = ",SUBTITLES=\"subs\""
 	}
+
 	for _, source := range movie.Sources {
 		fmt.Fprintf(out, "#EXT-X-STREAM-INF:BANDWIDTH=%s,RESOLUTION=%s,CODECS=\"%s\"%s%s\n", models.Bandwidths[source.Quality], models.Resolutions[source.Quality], models.Codecs[source.Quality], audioGroup, subsGroup)
 		fmt.Fprintf(out, "video/%s/%s_playlist.m3u8\n", source.Quality, source.Quality)
-
-		fmt.Printf("Generated local master playlist: %s\n", masterPath)
 	}
 }

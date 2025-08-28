@@ -12,8 +12,6 @@ import (
 )
 
 func CheckDaily(ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer wg.Done()
 
 	for {
 		select {
@@ -111,17 +109,6 @@ func DownloadWithID(ctx context.Context, episodeID string, season *models.Season
 			// if err != nil {
 			// 	return err
 			// }
-			fileID, err := repo.GetFileID(ctx, movies[i].Name)
-
-			if err != nil {
-				return err
-			}
-
-			err = repo.CreateMovieFile(ctx, fileID, movies[i].ID)
-
-			if err != nil {
-				return err
-			}
 
 			// err = os.RemoveAll("temp/" + movies[i].Name)
 
@@ -149,16 +136,18 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 		filmID := fmt.Sprintf("%d", searchResult.Films[i].ID)
 
 		if searchResult.Films[i].TypeID == 1 {
+			wg.Add(1)
 			err := DownloadWithID(ctx, "", nil, filmID, cfg, repo)
-
+			wg.Done()
 			if err != nil {
 				fmt.Println("Error downloading movie:", err)
 				continue
 			}
 
 		} else {
+			wg.Add(1)
 			bbmovieID, err := CreateMovie(ctx, filmID, cfg, repo)
-
+			wg.Done()
 			if err != nil {
 				fmt.Println("Error creating movie:", err)
 				continue
@@ -173,8 +162,9 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 
 			for j := range seasons {
 				fmt.Println("starting create one season episodes  :::  ", j)
+				wg.Add(1)
 				err := DownloadWithID(ctx, "", &seasons[j], filmID, cfg, repo)
-
+				wg.Done()
 				if err != nil {
 					fmt.Println("Error downloading movie episodes:", err)
 					continue
