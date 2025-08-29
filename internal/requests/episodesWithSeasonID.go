@@ -58,7 +58,7 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 		err = repo.CheckEpisodeExists(ctx, ep.ID)
 
 		if err != nil {
-			fmt.Println("❌ episode already exists:", err)
+			fmt.Println(err)
 			continue
 		}
 

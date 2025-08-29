@@ -63,8 +63,6 @@ func decodeIDResponse(bodyBytes []byte) (int, error) {
 }
 
 func (r *MovieRepository) CreateSeason(ctx context.Context, season models.Season, movieID string) (int, error) {
-	fmt.Println("🎬 Creating season:", season.Name, "for movie ID:", movieID)
-
 	// Convert movieID from string to int
 	movieIDInt, err := strconv.Atoi(movieID)
 	if err != nil {
@@ -86,7 +84,6 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, season models.Season
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, createSeasonURL, bytes.NewBuffer(bodyBytes))
 
 	if err != nil {
-		fmt.Println("sd8fiui")
 		return 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
@@ -100,14 +97,12 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, season models.Season
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("sd90f8io")
 		return 0, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
-		fmt.Println("s89dji")
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
@@ -120,11 +115,9 @@ func (r *MovieRepository) CreateSeason(ctx context.Context, season models.Season
 	seasonID, err := decodeIDResponse(bodyBytes)
 
 	if err != nil {
-		fmt.Println("sdf89 - CreateSeason decode error")
 		return 0, fmt.Errorf("failed to decode CreateSeason response: %w", err)
 	}
 
-	fmt.Println("✅ Season created successfully with ID:", seasonID)
 	return seasonID, nil
 }
 
@@ -153,7 +146,6 @@ func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 	cookies := resp.Header["Set-Cookie"]
 
 	if len(cookies) > 0 {
-		fmt.Println("🍪 Received Set-Cookie headers:", cookies)
 		cookie := ""
 
 		for i := range cookies {
@@ -180,7 +172,6 @@ func (r *MovieRepository) RefreshToken(ctx context.Context) error {
 }
 
 func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) (int, error) {
-	fmt.Println("🔍 Checking movie with ID:", movieID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(getMovieURL, movieID), nil)
 
 	if err != nil {
@@ -217,7 +208,6 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 }
 
 func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (int, error) {
-	fmt.Println("🔍 Getting category ID:", categoryID)
 	body := map[string]interface{}{
 		"name_tm": uuid.New().String(),
 		"name_ru": uuid.New().String(),
@@ -266,7 +256,6 @@ func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (in
 }
 
 func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]int, error) {
-	fmt.Println("🔍 Getting genre IDs:", genres)
 	genreIDs := []int{}
 
 	for i := range genres {
@@ -320,7 +309,6 @@ func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]i
 }
 
 func (r *MovieRepository) GetCountryIDs(ctx context.Context, countries []models.Country) ([]int, error) {
-	fmt.Println("🔍 Getting country IDs:", countries)
 	countryIDs := []int{}
 	for i := range countries {
 		body := map[string]interface{}{
@@ -416,7 +404,6 @@ func (r *MovieRepository) SendMovieImage(ctx context.Context, image models.Image
 }
 
 func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Person) ([]int, error) {
-	fmt.Println("🔍 Getting actor IDs:", actors)
 	actorIDs := []int{}
 
 	for i := range actors {
@@ -488,7 +475,6 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 }
 
 func (r *MovieRepository) UpdateActorImage(ctx context.Context, actorID int, actor models.Person, imageID int) error {
-	fmt.Println("🔍 Updating actor image:", actorID, actor.Name, imageID)
 
 	body := map[string]interface{}{
 		"bio":       actor.Name,
@@ -643,7 +629,6 @@ func (r *MovieRepository) uploadImage(ctx context.Context, imageData io.ReadClos
 }
 
 func (r *MovieRepository) GetStudioIDs(ctx context.Context, studios []models.Studio) ([]int, error) {
-	fmt.Println("🔍 Getting studio IDs:", studios)
 	studioIDs := []int{}
 
 	for i := range studios {
@@ -696,7 +681,6 @@ func (r *MovieRepository) GetStudioIDs(ctx context.Context, studios []models.Stu
 }
 
 func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (int, error) {
-	fmt.Println("🔍 Getting language ID for:", language)
 
 	body := map[string]interface{}{
 		"name_tm": language,
@@ -742,7 +726,6 @@ func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (i
 }
 
 func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, genreIDs, countryIDs, actorIDs, directorIDs, studioIDs []int, languageID, verticalImageID, verticalWithoutNameImageID, horizontalWithNameImageID, horizontalWithoutNameImageID, nameImageID int) (int, error) {
-	fmt.Println("🎬 Creating movie:", movie.Name)
 
 	duration := 0
 
@@ -836,12 +819,10 @@ func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, ge
 		return 0, fmt.Errorf("failed to decode CreateMovie response: %w", err)
 	}
 
-	fmt.Println("✅ Movie created successfully with ID:", movieID)
 	return movieID, nil
 }
 
 func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, error) {
-	fmt.Println("🎬 Creating movie file for:", name)
 
 	body := map[string]any{
 		"path": "movies/" + name + "/master.m3u8",
@@ -882,12 +863,10 @@ func (r *MovieRepository) GetFileID(ctx context.Context, name string) (int, erro
 		return 0, fmt.Errorf("failed to decode response s98dfu98sd: %w", err)
 	}
 
-	fmt.Println("✅ Movie file created successfully with ID:", response.ID)
 	return response.ID, nil
 }
 
 func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID int) error {
-	fmt.Println("🔗 Assigning file ID", fileID, "to movie ID", movieID)
 
 	body := map[string]any{
 		"file_id":  fileID,
@@ -925,12 +904,10 @@ func (r *MovieRepository) CreateMovieFile(ctx context.Context, fileID, movieID i
 		return fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
-	fmt.Println("✅ Successfully assigned file to movie")
 	return nil
 }
 
 func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Episode, seasonID int) (int, error) {
-	fmt.Println("📺 Creating episode:", episode.Name, "for season ID:", seasonID)
 
 	var imageInfo struct {
 		URL    string `json:"url"`
@@ -1005,7 +982,6 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return 0, fmt.Errorf("failed to decode response sd89fus9i8df: %w", err)
 	}
-	fmt.Println("✅ Episode created successfully with ID:", response.ID)
 	return response.ID, nil
 }
 

@@ -136,6 +136,7 @@ func uploadFile(ctx context.Context, client *minio.Client, bucketName, localPath
 	}
 
 	err := retryWithBackoff(ctx, 3, operation)
+
 	if err != nil {
 		return err
 	}

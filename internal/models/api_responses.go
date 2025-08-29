@@ -11,6 +11,7 @@ type SearchResult struct {
 }
 
 type SearchFilm struct {
-	ID     int `json:"id"`
-	TypeID int `json:"type_id"`
+	ID     int    `json:"id"`
+	TypeID int    `json:"type_id"`
+	Name   string `json:"name"`
 }

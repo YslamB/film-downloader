@@ -7,7 +7,6 @@ import (
 	"film-downloader/internal/models"
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -47,7 +46,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 	}
 
 	movieRes.Film.CategoryID, err = repo.GetCategoryID(ctx, movieRes.Film.CategoryID)
-	fmt.Println("🔍 Category ID:", movieRes.Film.CategoryID)
 	time.Sleep(1 * time.Second)
 
 	if err != nil {
@@ -55,7 +53,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 	}
 
 	genreIDs, err := repo.GetGenreIDs(ctx, movieRes.Film.Genres)
-	fmt.Println("🔍 Genre IDs:", genreIDs)
 	time.Sleep(1 * time.Second)
 
 	if err != nil {
@@ -63,7 +60,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 	}
 
 	countryIDs, err := repo.GetCountryIDs(ctx, movieRes.Film.Countries)
-	fmt.Println("🔍 Country IDs:", countryIDs)
 	time.Sleep(1 * time.Second)
 
 	if err != nil {
@@ -76,7 +72,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Actor IDs:", actorIDs)
 	time.Sleep(1 * time.Second)
 	directorIDs, err := repo.GetActorIDs(ctx, movieRes.Film.Directors)
 
@@ -84,7 +79,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Director IDs:", directorIDs)
 	time.Sleep(1 * time.Second)
 	studioIDs, err := repo.GetStudioIDs(ctx, movieRes.Film.Studios)
 
@@ -92,7 +86,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Studio IDs:", studioIDs)
 	time.Sleep(1 * time.Second)
 	verticalImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.Vertical.Default)
 
@@ -100,7 +93,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Vertical Image ID:", verticalImageID)
 	time.Sleep(1 * time.Second)
 	verticalWithoutNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.VerticalWithoutName.Default)
 
@@ -108,7 +100,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Vertical Without Name Image ID:", verticalWithoutNameImageID)
 	time.Sleep(1 * time.Second)
 	horizontalWithNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.HorizontalWithName.Default)
 
@@ -116,7 +107,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Horizontal With Name Image ID:", horizontalWithNameImageID)
 	time.Sleep(1 * time.Second)
 	horizontalWithoutNameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.HorizontalWithoutName.Default)
 
@@ -124,7 +114,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Horizontal Without Name Image ID:", horizontalWithoutNameImageID)
 	time.Sleep(1 * time.Second)
 	nameImageID, err := repo.SendMovieImage(ctx, movieRes.Film.Images.Name)
 
@@ -132,7 +121,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Name Image ID:", nameImageID)
 	time.Sleep(1 * time.Second)
 	languageID, err := repo.GetLanguageID(ctx, movieRes.Film.Language)
 
@@ -140,7 +128,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Language ID:", languageID)
 	time.Sleep(1 * time.Second)
 	movieID, err = repo.CreateMovie(
 		ctx, movieRes.Film, genreIDs, countryIDs, actorIDs, directorIDs,
@@ -152,7 +139,6 @@ func CreateMovie(ctx context.Context, filmID string, cfg *config.Config, repo *r
 		return 0, err
 	}
 
-	fmt.Println("🔍 Movie ID:", movieID)
 	time.Sleep(1 * time.Second)
 	return movieID, nil
 }

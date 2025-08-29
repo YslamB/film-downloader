@@ -27,7 +27,7 @@ func CheckNewMovies(ctx context.Context, cfg *config.Config, repo *repositories.
 			if err != nil {
 				fmt.Println("Error in GetLastMovies:", err)
 			}
-			time.Sleep(5 * time.Minute)
+			time.Sleep(3 * time.Minute)
 		}
 	}
 }
@@ -50,6 +50,7 @@ func DownloadWithID(ctx context.Context, episodeID string, season *models.Season
 		if err != nil {
 			return err
 		}
+
 		movies = append(movies, movieSources...)
 
 		for i := range movies {
@@ -136,7 +137,7 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 	}
 
 	for i := len(searchResult.Films) - 1; i >= 0; i-- {
-
+		fmt.Println("Checking movie:", searchResult.Films[i].Name)
 		filmID := fmt.Sprintf("%d", searchResult.Films[i].ID)
 
 		if searchResult.Films[i].TypeID == 1 {
@@ -145,15 +146,15 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 			wg.Done()
 
 			if err != nil {
-				fmt.Println("Error downloading movie:", err)
+				fmt.Println(err)
 				continue
 			}
 
 		} else {
 
-			if searchResult.Films[i].ID == 345667 {
-				fmt.Println("Found movie:", searchResult.Films[i].ID)
-			}
+			// if searchResult.Films[i].ID == 345667 {
+			// 	fmt.Println("Found movie:", searchResult.Films[i].ID)
+			// }
 
 			wg.Add(1)
 			bbmovieID, err := CreateMovie(ctx, filmID, cfg, repo)
@@ -172,7 +173,6 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 			}
 
 			for j := range seasons {
-				fmt.Println("starting create one season episodes  :::  ", j)
 				wg.Add(1)
 				err := DownloadWithID(ctx, "", &seasons[j], filmID, cfg, repo)
 				wg.Done()
