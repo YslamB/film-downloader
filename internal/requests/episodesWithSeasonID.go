@@ -50,6 +50,7 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 	var result models.EpisodeResponse
 
 	if err := json.Unmarshal(body, &result); err != nil {
+		fmt.Println("❌ failed to parse JSON:", string(body))
 		return movies, fmt.Errorf("❌ failed to parse JSON: %w", err)
 	}
 
@@ -102,10 +103,6 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 
 			movies = append(movies, movie)
 		}
-	}
-
-	if season != nil && len(movies) == 0 {
-		return movies, fmt.Errorf("❌ season %s not found or has no 1080p source", season.Name)
 	}
 
 	return movies, nil

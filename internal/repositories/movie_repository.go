@@ -205,8 +205,8 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 		if err != nil {
 			return 0, fmt.Errorf("failed to read response body: %w", err)
 		}
-
 		response.ID, err = strconv.Atoi(string(body))
+
 		if err != nil {
 			return 0, fmt.Errorf("failed to convert response body to int: %w", err)
 		}
@@ -399,7 +399,9 @@ func (r *MovieRepository) SendActorImage(ctx context.Context, actor models.Perso
 }
 
 func (r *MovieRepository) SendMovieImage(ctx context.Context, image models.ImageSize) (int, error) {
+	// TODO: image is must be movieRes.Film.Images.Vertical, try to download images from high to low.
 	imageData, filename, err := r.downloadImage(ctx, image.URL)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to download image: %w", err)
 	}

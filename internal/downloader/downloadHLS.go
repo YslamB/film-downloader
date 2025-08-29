@@ -37,7 +37,6 @@ func DownloadHLS(movie models.Movie, cfg *config.Config) error {
 		var videoM3U8 string
 		audioM3U8s := make(map[string]string)
 		subtitleM3U8s := make(map[string]string)
-
 		scanner := bufio.NewScanner(bytes.NewReader(masterContent))
 
 		for scanner.Scan() {

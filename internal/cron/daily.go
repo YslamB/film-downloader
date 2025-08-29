@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func CheckDaily(ctx context.Context, wg *sync.WaitGroup) {
+func CheckNewMovies(ctx context.Context, cfg *config.Config, repo *repositories.MovieRepository, wg *sync.WaitGroup) {
 
 	for {
 		select {
@@ -21,8 +21,13 @@ func CheckDaily(ctx context.Context, wg *sync.WaitGroup) {
 			// send req to search api, for last 200 items,
 			// CheckWithID() in for, get must istall film arrays
 			// DownloadWithID(), add wg for each download
+			fmt.Println("Checking Last Movies")
+			err := GetLastMovies(ctx, cfg, repo, wg)
 
-			time.Sleep(24 * time.Hour)
+			if err != nil {
+				fmt.Println("Error in GetLastMovies:", err)
+			}
+			time.Sleep(5 * time.Minute)
 		}
 	}
 }
@@ -94,6 +99,7 @@ func DownloadWithID(ctx context.Context, episodeID string, season *models.Season
 
 		time.Sleep(1 * time.Second)
 		for i := range movies {
+			fmt.Println("Downloading movie:", movies[i].Name)
 			// err := downloader.DownloadHLS(movies[i], cfg)
 
 			// if err != nil {
@@ -129,9 +135,7 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 		return fmt.Errorf("failed to get search results from API: %w", err)
 	}
 
-	// Process films sequentially to avoid WaitGroup reuse issues
-	for i := range searchResult.Films {
-		// Check if context is cancelled
+	for i := len(searchResult.Films) - 1; i >= 0; i-- {
 
 		filmID := fmt.Sprintf("%d", searchResult.Films[i].ID)
 
@@ -139,16 +143,23 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 			wg.Add(1)
 			err := DownloadWithID(ctx, "", nil, filmID, cfg, repo)
 			wg.Done()
+
 			if err != nil {
 				fmt.Println("Error downloading movie:", err)
 				continue
 			}
 
 		} else {
+
+			if searchResult.Films[i].ID == 345667 {
+				fmt.Println("Found movie:", searchResult.Films[i].ID)
+			}
+
 			wg.Add(1)
 			bbmovieID, err := CreateMovie(ctx, filmID, cfg, repo)
 			wg.Done()
-			if err != nil {
+
+			if err != nil && bbmovieID == 0 {
 				fmt.Println("Error creating movie:", err)
 				continue
 			}
@@ -165,6 +176,7 @@ func GetLastMovies(ctx context.Context, cfg *config.Config, repo *repositories.M
 				wg.Add(1)
 				err := DownloadWithID(ctx, "", &seasons[j], filmID, cfg, repo)
 				wg.Done()
+
 				if err != nil {
 					fmt.Println("Error downloading movie episodes:", err)
 					continue

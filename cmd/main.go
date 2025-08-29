@@ -25,11 +25,7 @@ func main() {
 	}
 
 	go func() {
-		err := cron.GetLastMovies(ctx, cfg, repo, &wg)
-
-		if err != nil {
-			log.Printf("Error in GetLastMovies: %v", err)
-		}
+		cron.CheckNewMovies(ctx, cfg, repo, &wg)
 	}()
 
 	// go func() {
