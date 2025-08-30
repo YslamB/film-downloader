@@ -7,11 +7,22 @@ import (
 	"film-downloader/internal/repositories"
 	"film-downloader/internal/requests"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
 
 func CheckNewMovies(ctx context.Context, cfg *config.Config, repo *repositories.MovieRepository, wg *sync.WaitGroup) {
+
+	go func() {
+		err := RefreshToken(ctx, cfg, repo)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		time.Sleep(3 * time.Hour)
+	}()
 
 	for {
 		select {
