@@ -20,7 +20,7 @@ const (
 func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, cfg *config.Config, repo *repositories.MovieRepository) ([]models.Movie, error) {
 	var movies []models.Movie
 	url := fmt.Sprintf(episodesURL, fmt.Sprintf("%d", season.ID))
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 
 	if err != nil {
 		return movies, fmt.Errorf("❌ failed to create request: %w", err)
@@ -50,7 +50,8 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 	var result models.EpisodeResponse
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		fmt.Println("❌ failed to parse JSON:", string(body))
+		fmt.Println("❌ failed to parse, url:", url)
+		fmt.Println("❌ failed to parse, body:", string(body))
 		return movies, fmt.Errorf("❌ failed to parse JSON: %w", err)
 	}
 
@@ -58,7 +59,6 @@ func GetEpisodesSourceWithSeasonID(ctx context.Context, season *models.Season, c
 		err = repo.CheckEpisodeExists(ctx, ep.ID)
 
 		if err != nil {
-			fmt.Println(err)
 			continue
 		}
 

@@ -23,21 +23,22 @@ type MovieRepository struct {
 }
 
 const (
+	defaultImageURL       = "https://img.belet.me/actors/default/default_actor.jpg"
 	refreshTokenURL       = "https://api.belet.tm/api/v1/auth/refresh"
-	getMovieURL           = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
-	createMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies"
-	createSeasonURL       = "http://95.85.126.217:5050/api/v1/admin/seasons"
-	createEpisodeURL      = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes"
 	getCategoryIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/categories"
 	getGenreIDURL         = "http://95.85.126.217:5050/api/v1/admin/catalogs/genres"
 	getCountryIDURL       = "http://95.85.126.217:5050/api/v1/admin/catalogs/countries"
 	getActorIDURL         = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons"
 	getStudioIDURL        = "http://95.85.126.217:5050/api/v1/admin/catalogs/studios"
 	getLanguageIDURL      = "http://95.85.126.217:5050/api/v1/admin/catalogs/languages"
-	sendImageURL          = "http://95.85.126.217:5050/api/v1/admin/movies/images"
 	updateActorURL        = "http://95.85.126.217:5050/api/v1/admin/catalogs/persons/%d"
+	sendImageURL          = "http://95.85.126.217:5050/api/v1/admin/movies/images"
+	getMovieURL           = "http://95.85.126.217:5050/api/v1/admin/movies/ext/%s"
+	createMovieURL        = "http://95.85.126.217:5050/api/v1/admin/movies"
 	createMovieFileURL    = "http://95.85.126.217:5050/api/v1/admin/movies/file"
 	assignMovieFileURL    = "http://95.85.126.217:5050/api/v1/admin/movies/files"
+	createEpisodeURL      = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes"
+	createSeasonURL       = "http://95.85.126.217:5050/api/v1/admin/seasons"
 	checkEpisodeExistsURL = "http://95.85.126.217:5050/api/v1/admin/seasons/episodes/ext/%d"
 )
 
@@ -208,7 +209,7 @@ func (r *MovieRepository) CheckMovieExists(ctx context.Context, movieID string) 
 }
 
 func (r *MovieRepository) GetCategoryID(ctx context.Context, categoryID int) (int, error) {
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name_tm": uuid.New().String(),
 		"name_ru": uuid.New().String(),
 		"name_en": uuid.New().String(),
@@ -259,7 +260,7 @@ func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]i
 	genreIDs := []int{}
 
 	for i := range genres {
-		body := map[string]interface{}{
+		body := map[string]any{
 			"name_tm": genres[i],
 			"name_ru": genres[i],
 			"name_en": genres[i],
@@ -311,7 +312,7 @@ func (r *MovieRepository) GetGenreIDs(ctx context.Context, genres []string) ([]i
 func (r *MovieRepository) GetCountryIDs(ctx context.Context, countries []models.Country) ([]int, error) {
 	countryIDs := []int{}
 	for i := range countries {
-		body := map[string]interface{}{
+		body := map[string]any{
 			"name_tm": countries[i].Name,
 			"name_ru": countries[i].Name,
 			"name_en": countries[i].Name,
@@ -374,6 +375,7 @@ func (r *MovieRepository) SendActorImage(ctx context.Context, actor models.Perso
 
 	imageData, filename, err := r.downloadImage(ctx, imageInfo.URL)
 	if err != nil {
+		fmt.Println("w43rfwe failed to download image: %w", imageInfo.URL)
 		return 0, fmt.Errorf("failed to download image: %w", err)
 	}
 	defer imageData.Close()
@@ -391,6 +393,7 @@ func (r *MovieRepository) SendMovieImage(ctx context.Context, image models.Image
 	imageData, filename, err := r.downloadImage(ctx, image.URL)
 
 	if err != nil {
+		fmt.Println("34 r failed to download image: %w", image.URL)
 		return 0, fmt.Errorf("failed to download image: %w", err)
 	}
 	defer imageData.Close()
@@ -407,7 +410,7 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 	actorIDs := []int{}
 
 	for i := range actors {
-		body := map[string]interface{}{
+		body := map[string]any{
 			"bio":       actors[i].Name,
 			"full_name": actors[i].Name,
 			"image_id":  1,
@@ -476,7 +479,7 @@ func (r *MovieRepository) GetActorIDs(ctx context.Context, actors []models.Perso
 
 func (r *MovieRepository) UpdateActorImage(ctx context.Context, actorID int, actor models.Person, imageID int) error {
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"bio":       actor.Name,
 		"full_name": actor.Name,
 		"image_id":  imageID,
@@ -519,6 +522,11 @@ func (r *MovieRepository) UpdateActorImage(ctx context.Context, actorID int, act
 }
 
 func (r *MovieRepository) downloadImage(ctx context.Context, imageURL string) (io.ReadCloser, string, error) {
+
+	if imageURL == "" {
+		imageURL = defaultImageURL
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil)
 
 	if err != nil {
@@ -614,6 +622,7 @@ func (r *MovieRepository) uploadImage(ctx context.Context, imageData io.ReadClos
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
+		// todo: Error creating movie: failed to upload image: bad response: 400 Bad Request, body: "Width must be between 50 and 10000"
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
@@ -632,7 +641,7 @@ func (r *MovieRepository) GetStudioIDs(ctx context.Context, studios []models.Stu
 	studioIDs := []int{}
 
 	for i := range studios {
-		body := map[string]interface{}{
+		body := map[string]any{
 			"name": studios[i].Name,
 		}
 
@@ -682,7 +691,7 @@ func (r *MovieRepository) GetStudioIDs(ctx context.Context, studios []models.Stu
 
 func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (int, error) {
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name_tm": language,
 		"name_ru": language,
 		"name_en": language,
@@ -725,7 +734,11 @@ func (r *MovieRepository) GetLanguageID(ctx context.Context, language string) (i
 	return language_response.ID, nil
 }
 
-func (r *MovieRepository) CreateMovie(ctx context.Context, movie models.Film, genreIDs, countryIDs, actorIDs, directorIDs, studioIDs []int, languageID, verticalImageID, verticalWithoutNameImageID, horizontalWithNameImageID, horizontalWithoutNameImageID, nameImageID int) (int, error) {
+func (r *MovieRepository) CreateMovie(
+	ctx context.Context, movie models.Film, genreIDs, countryIDs, actorIDs,
+	directorIDs, studioIDs []int, languageID, verticalImageID,
+	verticalWithoutNameImageID, horizontalWithNameImageID,
+	horizontalWithoutNameImageID, nameImageID int) (int, error) {
 
 	duration := 0
 
@@ -917,9 +930,11 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 	imageInfo.URL = episode.Image
 	imageInfo.Width = 640
 	imageInfo.Height = 360
+
 	imageData, filename, err := r.downloadImage(ctx, imageInfo.URL)
 
 	if err != nil {
+		fmt.Println("34rfed failed to download image: %w", imageInfo.URL)
 		return 0, fmt.Errorf("failed to download image: %w", err)
 	}
 	defer imageData.Close()
@@ -936,7 +951,7 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 		}
 	}
 
-	body := map[string]any{
+	reqBody := map[string]any{
 		"duration":  duration,
 		"file_id":   episode.FileID,
 		"image_id":  imageID,
@@ -945,7 +960,7 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 		"season_id": seasonID,
 		"title":     episode.Name,
 	}
-	bodyBytes, err := json.Marshal(body)
+	bodyBytes, err := json.Marshal(reqBody)
 
 	if err != nil {
 		return 0, fmt.Errorf("failed to marshal request body: %w", err)
@@ -971,6 +986,7 @@ func (r *MovieRepository) CreateEpisode(ctx context.Context, episode models.Epis
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
+		fmt.Println("req body:", reqBody)
 		return 0, fmt.Errorf("bad response: %s, body: %s", resp.Status, string(body))
 	}
 
